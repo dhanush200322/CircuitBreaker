@@ -37,6 +37,13 @@ export const Dashboard = () => {
               inventory: 'UP',
               recommendation: 'UP',
             });
+            try {
+              const metricsData = await getAllResilienceMetrics();
+              setMetrics(metricsData);
+            } catch (err) {
+              console.error('Failed to fetch resilience metrics', err);
+              setMetrics(null);
+            }
           } else {
             setBackendOffline(true);
             setServicesStatus({
@@ -46,6 +53,7 @@ export const Dashboard = () => {
               inventory: 'DOWN',
               recommendation: 'DOWN',
             });
+            setMetrics(null);
           }
         } catch {
           setBackendOffline(true);
@@ -56,8 +64,8 @@ export const Dashboard = () => {
             inventory: 'DOWN',
             recommendation: 'DOWN',
           });
+          setMetrics(null);
         }
-        setMetrics(null);
         setZipkinStatus('LOCAL_ONLY');
         setTracedServices([]);
         setLastUpdated(new Date().toLocaleTimeString());
@@ -137,7 +145,7 @@ export const Dashboard = () => {
               <span className="text-2xl">ℹ️</span>
               <div>
                 <strong className="block font-bold text-amber-300">PUBLIC DEMO MODE</strong>
-                <span className="text-sm opacity-90">Observability unavailable in public demo. Eureka, Zipkin, and Actuator metrics are disabled for security.</span>
+                <span className="text-sm opacity-90">Observability restricted in public demo. Eureka and Zipkin tracing are disabled for security; live Resilience4j Actuator metrics are active.</span>
               </div>
             </div>
           </div>

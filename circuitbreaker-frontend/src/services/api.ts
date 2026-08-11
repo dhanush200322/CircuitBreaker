@@ -18,9 +18,8 @@ export const getEurekaApps = (): Promise<EurekaApps> => {
 };
 
 export const getMetric = async (metricName: string, extraTags: string = ''): Promise<number> => {
-  if (import.meta.env.PROD) return 0;
   try {
-    const data = await fetchJson<MetricResponse>(`/actuator/metrics/${metricName}?tag=name:recommendationService${extraTags}`);
+    const data = await fetchJson<MetricResponse>(`/gateway/recommendation-service/actuator/metrics/${metricName}?tag=name:recommendationService${extraTags}`);
     return data.measurements?.[0]?.value ?? 0;
   } catch (e) {
     console.error(`Error fetching metric ${metricName}:`, e);
