@@ -10,8 +10,16 @@
       "destination": "https://expected-racks-edt-print.trycloudflare.com/eureka/:path*"
     },
     {
-      "source": "/zipkin/:path*",
-      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/:path*"
+      "source": "/zipkin",
+      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/"
+    },
+    {
+      "source": "/zipkin/",
+      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/"
+    },
+    {
+      "source": "/zipkin/:path+",
+      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/:path+"
     }
   ]
 }
