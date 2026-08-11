@@ -2,7 +2,15 @@
   "rewrites": [
     {
       "source": "/gateway/:path*",
-      "destination": "https://translator-rico-bid-requiring.trycloudflare.com/:path*"
+      "destination": "https://scholars-attachment-social-respond.trycloudflare.com/:path*"
+    },
+    {
+      "source": "/eureka-api/:path*",
+      "destination": "https://expected-racks-edt-print.trycloudflare.com/eureka/:path*"
+    },
+    {
+      "source": "/zipkin/:path*",
+      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/:path*"
     }
   ]
 }

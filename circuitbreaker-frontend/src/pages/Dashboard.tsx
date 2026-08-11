@@ -25,55 +25,8 @@ export const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      if (import.meta.env.PROD) {
-        try {
-          const res = await fetch('/gateway/product-service/products');
-          if (res.ok) {
-            setBackendOffline(false);
-            setServicesStatus({
-              eureka: 'LOCAL_ONLY',
-              apiGateway: 'UP',
-              product: 'UP',
-              inventory: 'UP',
-              recommendation: 'UP',
-            });
-            try {
-              const metricsData = await getAllResilienceMetrics();
-              setMetrics(metricsData);
-            } catch (err) {
-              console.error('Failed to fetch resilience metrics', err);
-              setMetrics(null);
-            }
-          } else {
-            setBackendOffline(true);
-            setServicesStatus({
-              eureka: 'LOCAL_ONLY',
-              apiGateway: 'DOWN',
-              product: 'DOWN',
-              inventory: 'DOWN',
-              recommendation: 'DOWN',
-            });
-            setMetrics(null);
-          }
-        } catch {
-          setBackendOffline(true);
-          setServicesStatus({
-            eureka: 'LOCAL_ONLY',
-            apiGateway: 'DOWN',
-            product: 'DOWN',
-            inventory: 'DOWN',
-            recommendation: 'DOWN',
-          });
-          setMetrics(null);
-        }
-        setZipkinStatus('LOCAL_ONLY');
-        setTracedServices([]);
-        setLastUpdated(new Date().toLocaleTimeString());
-        return;
-      }
-
       const eurekaData = await getEurekaApps();
-      const apps = eurekaData.applications.application || [];
+      const apps = eurekaData.applications?.application || [];
       
       const isUp = (appName: string) => {
         const app = apps.find((a: any) => a.name === appName);
@@ -95,7 +48,7 @@ export const Dashboard = () => {
       try {
         const zipkinData = await getZipkinServices();
         setTracedServices(zipkinData);
-        setZipkinStatus(zipkinData.length > 0 || zipkinData !== null ? 'UP' : 'DOWN');
+        setZipkinStatus(zipkinData && zipkinData.length > 0 ? 'UP' : 'DOWN');
       } catch {
         setZipkinStatus('DOWN');
         setTracedServices([]);
@@ -110,6 +63,8 @@ export const Dashboard = () => {
         inventory: 'UNKNOWN',
         recommendation: 'UNKNOWN',
       });
+      setZipkinStatus('DOWN');
+      setMetrics(null);
     } finally {
       setLastUpdated(new Date().toLocaleTimeString());
     }
@@ -140,12 +95,12 @@ export const Dashboard = () => {
         )}
 
         {import.meta.env.PROD && !backendOffline && (
-          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-6 py-4 rounded-xl shadow-lg shadow-amber-900/20 flex items-center justify-between">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-6 py-4 rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-2xl">ℹ️</span>
+              <span className="text-2xl">✨</span>
               <div>
-                <strong className="block font-bold text-amber-300">PUBLIC DEMO MODE</strong>
-                <span className="text-sm opacity-90">Observability restricted in public demo. Eureka and Zipkin tracing are disabled for security; live Resilience4j Actuator metrics are active.</span>
+                <strong className="block font-bold text-emerald-300">LIVE OBSERVABILITY ACTIVE</strong>
+                <span className="text-sm opacity-90">Eureka service discovery, Zipkin distributed tracing, and Resilience4j Actuator metrics are fully live through secure read-only public routes.</span>
               </div>
             </div>
           </div>
