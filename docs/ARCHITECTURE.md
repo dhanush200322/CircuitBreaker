@@ -359,3 +359,46 @@ The Recommendation Service exposes Resilience4j metrics via Spring Boot Actuator
 | `resilience4j.ratelimiter.available.permissions` | `name:recommendationService` | Remaining token count in the current 10-second refresh window. |
 | `resilience4j.bulkhead.available.concurrent.calls` | `name:recommendationService` | Available concurrency slots (1 or 0). |
 | `resilience4j.bulkhead.max.allowed.concurrent.calls` | `name:recommendationService` | Configured max concurrency capacity (1.0). |
+
+---
+
+## 11. Production Hybrid Edge Deployment Architecture
+
+The production environment operates as a zero-cost, high-performance hybrid topology bridging global edge hosting with local multi-container Docker Compose microservices:
+
+```text
++-------------------------------------------------------------------------------+
+|                       Vercel Global Edge Hosting                              |
+|                       https://circuit-breaker-one.vercel.app                  |
++-------------------+---------------------------+-------------------------------+
+                    |                           |                               |
+  /gateway/:path*   |           /eureka-api/*   |               /zipkin/:path*  |
+  Rewrite           |           Rewrite         |               Rewrite         |
+                    v                           v                               v
++-----------------------+   +-----------------------+   +-----------------------+
+|  Cloudflare Tunnel    |   |  Cloudflare Tunnel    |   |  Cloudflare Tunnel    |
+|  (Gateway Ingress)    |   |  (Eureka Ingress)     |   |  (Zipkin Ingress)     |
++-----------+-----------+   +-----------+-----------+   +-----------+-----------+
+            |                           |                           |
+            | (Encrypted TLS Tunnel)    | (Encrypted TLS Tunnel)    | (Encrypted TLS Tunnel)
+            v                           v                           v
++-------------------------------------------------------------------------------+
+|                       Local Docker Compose Stack                              |
+|                                                                               |
+|  +---------------------+   +---------------------+   +---------------------+  |
+|  | API Gateway :8084   |   | Eureka Server :8080 |   | Zipkin Server :9411 |  |
+|  +----------+----------+   +----------+----------+   +----------+----------+  |
+|             |                         |                         ^             |
+|             | Dynamic Service Routing | Instance Registration   | Trace Spans |
+|             +-------------------------+-------------------------+             |
+|             |                                                                 |
+|  +----------v----------+   +---------------------+   +---------------------+  |
+|  | Product Svc :8081   |   | Inventory Svc :8082 |   | Recommendation :8083|  |
+|  +---------------------+   +---------------------+   +---------------------+  |
++-------------------------------------------------------------------------------+
+```
+
+### Architectural Highlights of the Hybrid Deployment
+1. **Edge-to-Container Ingress:** Vercel edge rewrites eliminate CORS by proxying browser requests to three Cloudflare Quick Tunnels.
+2. **Zero-Trust Network Boundary:** Downstream business services (Product, Inventory, Recommendation) and sensitive Actuator mutation endpoints are never exposed publicly; only the Gateway, Eureka read-only API, and Zipkin read-only API are accessible through specific rewrites.
+3. **No-Cost / No-Card Infrastructure:** Eliminates expensive cloud VM hosting while delivering genuine, live microservice interactions with sub-50ms latency.

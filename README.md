@@ -1,156 +1,142 @@
-# CircuitBreaker â€” Cloud-Native Resilience & Distributed Tracing Platform
+# CircuitBreaker — Resilient Java Microservices Platform
 
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://adoptium.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.1-blue.svg)](https://spring.io/projects/spring-cloud)
 [![Resilience4j](https://img.shields.io/badge/Resilience4j-2.2.0-red.svg)](https://resilience4j.readme.io/)
 [![Zipkin](https://img.shields.io/badge/Zipkin-Distributed%20Tracing-purple.svg)](https://zipkin.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://www.docker.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Production%20Deployment-black.svg)](https://circuit-breaker-one.vercel.app/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-8-yellow.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-cyan.svg)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6.svg)](https://www.typescriptlang.org/)
 
-A cloud-native microservices architecture demonstrating enterprise-grade resilience patterns, dynamic service discovery, intelligent API gateway routing, end-to-end distributed tracing, chaos engineering, and a real-time React monitoring dashboard.
+A cloud-native microservices platform built to demonstrate enterprise-grade fault tolerance, dynamic service discovery, reactive edge routing, end-to-end distributed tracing, and live observability metrics.
+
+---
+
+## 🎥 Project Demo
+
+> Full video demonstration of the CircuitBreaker microservices architecture, live chaos testing, failure fallbacks, and distributed tracing.
+
+[Watch the full project demonstration](VIDEO_LINK_HERE)
+
+*For the complete spoken walkthrough and presentation guide, see [`docs/VIDEO-DEMO-SCRIPT.md`](docs/VIDEO-DEMO-SCRIPT.md).*
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
+- [Overview & Objectives](#overview--objectives)
 - [System Architecture](#system-architecture)
-- [Services & Port Allocation](#services--port-allocation)
 - [Technology Stack](#technology-stack)
-- [Resilience Architecture](#resilience-architecture)
-- [End-to-End Request Flow](#end-to-end-request-flow)
-- [API Reference & Examples](#api-reference--examples)
-- [Chaos Engineering & Fault Injection](#chaos-engineering--fault-injection)
-- [Distributed Tracing & Observability](#distributed-tracing--observability)
-- [React Monitoring Dashboard](#react-monitoring-dashboard)
-- [Local Setup & Running](#local-setup--running)
-- [Verification & Testing](#verification--testing)
-- [QA Summary](#qa-summary)
-- [Project Directory Structure](#project-directory-structure)
-- [Future Improvements](#future-improvements)
+- [Microservices Roster](#microservices-roster)
+- [Resilience Engineering & Circuit Breakers](#resilience-engineering--circuit-breakers)
+- [Chaos Engineering & Failure Simulation](#chaos-engineering--failure-simulation)
+- [Live Production Deployment](#live-production-deployment)
+- [Important Deployment Notes](#important-deployment-notes)
+- [Local Installation & Setup](#local-installation--setup)
+- [Verification & Testing Commands](#verification--testing-commands)
+- [How I Explain This Project in an Interview](#how-i-explain-this-project-in-an-interview)
+- [Key Project Highlights](#key-project-highlights)
 - [Documentation Index](#documentation-index)
 
 ---
 
-## Overview
+## Overview & Objectives
 
-In modern distributed microservices architectures, network partitions, cascading failures, downstream latencies, and intermittent service crashes are inevitable. The **CircuitBreaker** platform demonstrates how to build resilient, self-healing backend systems using **Spring Boot 3**, **Spring Cloud Gateway**, **Netflix Eureka**, and **Resilience4j**, paired with full-stack observability via **Micrometer Tracing**, **Zipkin**, and a dedicated **React Monitoring & Chaos Dashboard**.
+In distributed systems, downstream network partitions, transient errors, and latency spikes are inevitable. Without resilience mechanisms, a single slow or failing service can trigger cascading failures across an entire infrastructure, exhausting thread pools and causing catastrophic outages.
 
-The project simulates an e-commerce platform where product catalog queries and inventory lookups route through an intelligent API Gateway to independent microservices. The **Recommendation Service** acts as a fault-tolerance testbed, implementing six key resilience patterns (Circuit Breaker, Fallback, Retry, TimeLimiter, RateLimiter, and Bulkhead) to guarantee system availability even under heavy failure and extreme latency conditions.
+The **CircuitBreaker** platform demonstrates a self-healing microservices architecture designed to solve these challenges:
 
----
-
-## Key Features
-
-- **Dynamic Service Discovery**: Centralized registration using Spring Cloud Netflix Eureka for automatic instance discovery without static host/port dependencies.
-- **Intelligent API Gateway**: Reactive edge gateway built on Spring Cloud Gateway (WebFlux) providing unified routing, dynamic service locator integration, and trace context propagation.
-- **Resilience4j Fault Tolerance**:
-  - **Circuit Breaker**: Detects failure rates and opens the circuit to fail fast and protect downstream dependencies.
-  - **Graceful Fallback**: Returns degraded yet valid responses (HTTP 200 with fallback payload) preventing client-facing 500 errors.
-  - **Smart Retry**: Automatically retries transient exceptions up to 3 times with exponential backoff intervals.
-  - **TimeLimiter (Timeout)**: Enforces a strict 2-second timeout window on asynchronous execution to prevent connection exhaustion.
-  - **Rate Limiter**: Enforces API throughput limits (2 requests per 10-second period) to defend against burst traffic.
-  - **Bulkhead**: Limits concurrent execution (max 1 concurrent call) to isolate resource pools and prevent thread pool starvation.
-- **Distributed Tracing with Zipkin**: End-to-end span propagation across the API Gateway and downstream microservices using W3C/B3 context propagation via Micrometer Tracing and Brave.
-- **Chaos Engineering Controls**: Dedicated interactive UI and API query parameters (`?fail=true`, `?delay=3000`) for on-demand failure injection and latency simulation.
-- **Real-Time Monitoring Dashboard**: Dark-mode glassmorphic React 19 interface tracking microservice health, real-time Resilience4j actuator metrics, live circuit breaker states, and exact Zipkin trace summaries.
+- **Dynamic Service Discovery:** Decouples microservice locations using Netflix Eureka so services register and discover each other dynamically without static IP dependencies.
+- **Reactive Edge Routing:** Uses Spring Cloud Gateway to provide single-entry routing, client-side load balancing, and trace propagation.
+- **Multi-Layered Fault Tolerance:** Implements Resilience4j Circuit Breakers, Smart Retries, TimeLimiters (timeouts), Bulkheads, and Rate Limiters on critical endpoints.
+- **Graceful Degradation & Fallbacks:** Guarantees that failing downstream calls return valid, degraded responses (HTTP 200) instead of raw 500 error cascades.
+- **Distributed Tracing:** Propagates W3C/B3 context across service boundaries with Micrometer Tracing and OpenZipkin to track request waterfalls and latency bottlenecks.
+- **Live Observability:** Visualizes real-time Actuator metrics, circuit breaker states, and live trace IDs on a reactive React dashboard.
 
 ---
 
 ## System Architecture
 
 ```text
-                               +----------------------------------+
-                               |     React Monitoring Dashboard   |
-                               |          (Port: 5173/5175)       |
-                               +-----------------+----------------+
-                                                 |
-                         HTTP / REST API Requests |  (Vite Proxy)
-                                                 v
-                               +----------------------------------+
-                               |        Spring Cloud Gateway      |
-                               |            (Port: 8084)          |
-                               +--------+----------------+--------+
-                                        |                |
-                Dynamic Discovery Queries|                | Routes Traffic
-                                        v                |
-                        +---------------+----+           |
-                        |   Eureka Registry  |           |
-                        |    (Port: 8080)    |           |
-                        +---------------+----+           |
-                                        ^                |
-                Service Registrations   |                |
-          +-----------------------------+----------------+-----------------------------+
-          |                             |                                              |
-          v                             v                                              v
-+-------------------+         +--------------------+                        +--------------------+
-|  Product Service  |         |  Inventory Service |                        |   Recommendation   |
-|   (Port: 8081)    |         |    (Port: 8082)    |                        |      Service       |
-+---------+---------+         +---------+----------+                        |    (Port: 8083)    |
-          |                             |                                   +---------+----------+
-          |                             |                                             |
-          |                             |   [Resilience4j Layer]                      |
-          |                             |   - Circuit Breaker (slidingWindow: 5)      |
-          |                             |   - Fallback Method                         |
-          |                             |   - Retry (maxAttempts: 3)                  |
-          |                             |   - TimeLimiter (timeout: 2s)               |
-          |                             |   - RateLimiter (2 req / 10s)               |
-          |                             |   - Bulkhead (maxConcurrent: 1)             |
-          |                             |                                             |
-          +-----------------------------+---------------------------------------------+
-                                        |
-                            Spans Export (HTTP POST)
-                                        v
-                               +-----------------+
-                               |  Zipkin Server  |
-                               |  (Port: 9411)   |
-                               +-----------------+
+User Browser
+    │
+    ▼
+Vercel Frontend (https://circuit-breaker-one.vercel.app)
+    │
+    ├─────────────────────────────┬─────────────────────────────┐
+    │ /gateway/*                  │ /eureka-api/*               │ /zipkin/*
+    ▼                             ▼                             ▼
+Cloudflare Quick Tunnel       Cloudflare Quick Tunnel       Cloudflare Quick Tunnel
+(API Gateway Ingress)         (Eureka Ingress)              (Zipkin Ingress)
+    │                             │                             │
+    ▼                             ▼                             ▼
+Spring Cloud Gateway          Eureka Service Registry       OpenZipkin Server
+(Port: 8084)                  (Port: 8080)                  (Port: 9411)
+    │                             ▲                             ▲
+    │                             │ Service Heartbeats          │ Trace Spans
+    ├──── Eureka Discovery ───────┤                             │
+    │                             │                             │
+    ├───► Product Service ────────┴─────────────────────────────┤
+    │     (Port: 8081)                                          │
+    │                                                           │
+    ├───► Inventory Service ──────┬─────────────────────────────┤
+    │     (Port: 8082)            │                             │
+    │                             │                             │
+    └───► Recommendation Service ─┴─────────────────────────────┘
+          (Port: 8083)
+               │
+               ├── Resilience4j (CircuitBreaker, Retry, TimeLimiter)
+               └── Spring Boot Actuator (Live Metrics)
 ```
 
----
+### Docker Compose Multi-Container Stack
 
-## Services & Port Allocation
-
-| Component | Port | Technology | Key Responsibility |
-|:---|:---:|:---|:---|
-| **Eureka Registry** | `8080` | Spring Cloud Netflix Eureka | Dynamic service directory, heartbeat monitoring, and instance location lookup. |
-| **Product Service** | `8081` | Spring Boot 3 Web, Eureka Client | Serves product catalog queries (`/products`). |
-| **Inventory Service** | `8082` | Spring Boot 3 Web, Eureka Client | Manages and validates item inventory stock levels (`/inventory/{productId}`). |
-| **Recommendation Service** | `8083` | Spring Boot 3 Web, Resilience4j, Actuator | Generates product recommendations with Resilience4j circuit breakers & fallbacks. |
-| **API Gateway** | `8084` | Spring Cloud Gateway (WebFlux) | Edge routing, reverse proxying, Eureka discovery locator, and trace propagation. |
-| **Zipkin Tracing** | `9411` | OpenZipkin Server | Ingests, indexes, and visualizes distributed spans across microservices. |
-| **Frontend Dashboard** | `5173` / `5175` | React 19, TypeScript, Vite, Tailwind CSS | Real-time resilience metrics visualization, chaos trigger buttons, and trace inspector. |
+```text
+Docker Compose Network (circuitbreaker-network)
+ ├── service-registry        :8080  (Netflix Eureka Server)
+ ├── api-gateway             :8084  (Spring Cloud Gateway Edge)
+ ├── product-service         :8081  (Product Catalog Microservice)
+ ├── inventory-service       :8082  (Stock Validation Microservice)
+ ├── recommendation-service  :8083  (Recommendation Engine + Resilience4j)
+ └── zipkin                  :9411  (OpenZipkin Distributed Tracing)
+```
 
 ---
 
 ## Technology Stack
 
-### Backend Stack
-- **Language**: Java 17 (LTS)
-- **Framework**: Spring Boot `3.2.5`
-- **Cloud Infrastructure**: Spring Cloud `2023.0.1`
-- **Service Discovery**: Spring Cloud Starter Netflix Eureka Client / Server
-- **API Gateway**: Spring Cloud Starter Gateway (Reactive / Spring WebFlux)
-- **Fault Tolerance**: Resilience4j `2.2.0` (`resilience4j-spring-boot3`, `spring-boot-starter-aop`)
-- **Observability & Metrics**: Spring Boot Starter Actuator
-- **Distributed Tracing**: Micrometer Tracing Bridge Brave (`io.micrometer:micrometer-tracing-bridge-brave`), Zipkin Reporter Brave (`io.zipkin.reporter2:zipkin-reporter-brave`)
-- **Build Tool**: Apache Maven (Multi-Module Project Structure)
-
-### Frontend Stack
-- **Library**: React `19.2.8`
-- **Language**: TypeScript `6.0.2`
-- **Bundler & Dev Server**: Vite `8.2.0` (`@vitejs/plugin-react`)
-- **Styling**: Tailwind CSS `4.3.3` with PostCSS and Autoprefixer
-- **Linter**: Oxlint `1.75.0`
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend UI** | React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons |
+| **Edge & API Gateway** | Spring Cloud Gateway (Reactive / Spring WebFlux) |
+| **Service Discovery** | Spring Cloud Netflix Eureka Server & Client |
+| **Fault Tolerance** | Resilience4j 2.2.0 (`CircuitBreaker`, `Retry`, `TimeLimiter`, `Bulkhead`, `RateLimiter`) |
+| **Backend Framework** | Java 17 (LTS), Spring Boot 3.2.5, Spring Boot Starter Actuator |
+| **Distributed Tracing** | Micrometer Tracing Bridge Brave, Zipkin Reporter Brave, OpenZipkin |
+| **Containerization** | Docker, Docker Compose, Multi-Stage Java Builds |
+| **Cloud & Ingress** | Vercel Edge Hosting, Cloudflare Quick Ingress Tunnels, GitHub Actions / Git CI |
 
 ---
 
-## Resilience Architecture
+## Microservices Roster
 
-The Recommendation Service implements a multi-layered defense-in-depth resilience pipeline configured via `application.properties` and declared using AOP annotations on `RecommendationController`:
+| Service Name | Port | Technology | Primary Responsibility |
+| :--- | :---: | :--- | :--- |
+| **Eureka Registry** | `8080` | Spring Cloud Netflix Eureka | Dynamic instance registration, health checks, and service lookup directory. |
+| **Product Service** | `8081` | Spring Boot 3 Web | Manages and serves the product catalog data (`/products`). |
+| **Inventory Service** | `8082` | Spring Boot 3 Web | Manages stock verification and warehouse quantities (`/inventory/{id}`). |
+| **Recommendation Service** | `8083` | Spring Boot 3, Resilience4j | Generates product add-ons; houses the Resilience4j fault-tolerance pipeline. |
+| **API Gateway** | `8084` | Spring Cloud Gateway | Edge proxy, Eureka discovery locator routing, and span context propagation. |
+| **Zipkin Server** | `9411` | OpenZipkin Container | Ingests, indexes, and visualizes cross-service distributed trace waterfalls. |
+| **Monitoring Dashboard** | `5173` | React 19, Vite, TypeScript | Real-time observability dashboard, chaos injection controls, and metric charts. |
+
+---
+
+## Resilience Engineering & Circuit Breakers
+
+The **Recommendation Service** acts as our resilience testbed. Its endpoints are guarded by Resilience4j aspects executed in strict hierarchical order:
 
 ```java
 @GetMapping("/{productId}")
@@ -159,389 +145,167 @@ The Recommendation Service implements a multi-layered defense-in-depth resilienc
 @Bulkhead(name = "recommendationService")
 @Retry(name = "recommendationService")
 @TimeLimiter(name = "recommendationService")
-public CompletableFuture<RecommendationResponse> getRecommendations(
-        @PathVariable String productId,
-        @RequestParam(required = false, defaultValue = "false") boolean fail,
-        @RequestParam(required = false, defaultValue = "0") int delay) {
-    // Business logic wrapped in CompletableFuture.supplyAsync(...)
+public CompletableFuture<RecommendationResponse> getRecommendations(...) {
+    // Asynchronous business logic wrapped in CompletableFuture
 }
 ```
 
-### Configured Aspect Order
-To ensure proper fault interception, aspects are ordered from outermost to innermost:
-1. **CircuitBreaker (Order 1)**: Outermost aspect. Catches any exception (including RateLimiter, Bulkhead, TimeLimiter, and Retry failures) and redirects execution to `fallbackRecommendations`.
-2. **RateLimiter (Order 2)**: Checks permission token availability (2 requests per 10s).
-3. **Bulkhead (Order 3)**: Enforces concurrency limit (max 1 concurrent call).
-4. **Retry (Order 4)**: Retries transient failures up to 3 times before propagating exception outward.
-5. **TimeLimiter (Order 5)**: Innermost aspect. Enforces 2-second asynchronous timeout limit on the `CompletableFuture`.
-
-### Detailed Configuration Parameters
-
-```properties
-# Circuit Breaker Configuration
-resilience4j.circuitbreaker.instances.recommendationService.slidingWindowSize=5
-resilience4j.circuitbreaker.instances.recommendationService.failureRateThreshold=50
-resilience4j.circuitbreaker.instances.recommendationService.waitDurationInOpenState=5s
-resilience4j.circuitbreaker.instances.recommendationService.permittedNumberOfCallsInHalfOpenState=3
-resilience4j.circuitbreaker.instances.recommendationService.automaticTransitionFromOpenToHalfOpenEnabled=true
-
-# Retry Configuration
-resilience4j.retry.instances.recommendationService.maxAttempts=3
-resilience4j.retry.instances.recommendationService.waitDuration=1s
-
-# TimeLimiter Configuration
-resilience4j.timelimiter.instances.recommendationService.timeoutDuration=2s
-resilience4j.timelimiter.instances.recommendationService.cancelRunningFuture=true
-
-# RateLimiter Configuration
-resilience4j.ratelimiter.instances.recommendationService.limitForPeriod=2
-resilience4j.ratelimiter.instances.recommendationService.limitRefreshPeriod=10s
-resilience4j.ratelimiter.instances.recommendationService.timeoutDuration=0
-
-# Bulkhead Configuration
-resilience4j.bulkhead.instances.recommendationService.maxConcurrentCalls=1
-resilience4j.bulkhead.instances.recommendationService.maxWaitDuration=0
-```
-
----
-
-## End-to-End Request Flow
+### Circuit Breaker State Lifecycle
 
 ```text
-[Client / Frontend]
-        |
-        | 1. HTTP GET http://localhost:8084/recommendation-service/recommendations/1
-        v
-[API Gateway :8084]
-        | 2. Extract / Generate Trace ID (B3 / W3C Propagation)
-        | 3. Query Eureka for "RECOMMENDATION-SERVICE" host/port
-        v
-[Eureka Server :8080] ---> Returns "http://localhost:8083"
-        |
-        | 4. Forward request with HTTP Trace Headers (X-B3-TraceId, etc.)
-        v
-[Recommendation Service :8083]
-        |
-        +---> [RateLimiter Check] ---> Passed (Tokens available)
-        |
-        +---> [Bulkhead Check]    ---> Passed (Concurrent slots available)
-        |
-        +---> [CircuitBreaker]    ---> CLOSED State
-        |
-        +---> [Retry Wrapper]     ---> Attempt 1
-        |
-        +---> [TimeLimiter]       ---> Enforce 2s async timeout limit
-        |
-        +---> [Controller Logic]  ---> Return RecommendationResponse
-        |
-        | 5. Return HTTP 200 JSON
-        v
-[API Gateway :8084]
-        |
-        | 6. Return response to Client & emit Span to Zipkin
-        v
-[Client / Frontend] + [Zipkin :9411]
+    ┌────────────────────────────────────────────────────────┐
+    │                                                        │
+    ▼                                                        │
+┌─────────┐   Failure Rate > 50%   ┌──────┐   Wait Duration (5s)   ┌───────────┐   Recovery Pass   ┌─────────┐
+│ CLOSED  │ ─────────────────────► │ OPEN │ ─────────────────────► │ HALF-OPEN │ ────────────────► │ CLOSED  │
+└─────────┘                        └──────┘                        └───────────┘                   └─────────┘
+     ▲                                                                   │
+     │                         Recovery Failed                           │
+     └───────────────────────────────────────────────────────────────────┘
 ```
+
+1. **CLOSED (Healthy):** Requests execute normally. Call durations and outcomes are measured within a sliding window of 5 calls.
+2. **FAILURE SPIKE:** When the failure rate reaches or exceeds **50%**, the Circuit Breaker trips to protect downstream resources.
+3. **OPEN (Failing Fast):** All subsequent calls are immediately blocked from hitting downstream logic and redirected to the `fallbackRecommendations` handler without network overhead.
+4. **HALF-OPEN (Probing):** After a 5-second wait duration, the circuit transitions to HALF-OPEN and permits 3 trial calls to assess downstream health.
+5. **RECOVERY / RETRIP:** If all trial calls succeed, the circuit returns to **CLOSED**; if any trial call fails, it reverts to **OPEN**.
 
 ---
 
-## API Reference & Examples
+## Chaos Engineering & Failure Simulation
 
-### 1. Direct Microservice Endpoints
-```bash
-# Product Service
-curl -i http://localhost:8081/products
+The platform provides built-in query parameters and dedicated UI controls to inject chaos and observe resilience behavior in real time:
 
-# Inventory Service
-curl -i http://localhost:8082/inventory/1
-
-# Recommendation Service (Normal)
-curl -i http://localhost:8083/recommendations/1
-```
-
-### 2. API Gateway Routed Endpoints
-```bash
-# Route to Product Service
-curl -i http://localhost:8084/product-service/products
-
-# Route to Inventory Service
-curl -i http://localhost:8084/inventory-service/inventory/1
-
-# Route to Recommendation Service
-curl -i http://localhost:8084/recommendation-service/recommendations/1
-```
-
-### 3. Actuator Metrics Endpoints
-```bash
-# Recommendation Service Health
-curl -s http://localhost:8083/actuator/health
-
-# Circuit Breaker Metrics
-curl -s "http://localhost:8083/actuator/metrics/resilience4j.circuitbreaker.calls?tag=name:recommendationService"
-
-# Bulkhead Available Concurrency
-curl -s "http://localhost:8083/actuator/metrics/resilience4j.bulkhead.available.concurrent.calls?tag=name:recommendationService"
-```
+| Test Case | Trigger Endpoint | Injected Behavior | Observed System Response |
+| :--- | :--- | :--- | :--- |
+| **Normal Request** | `GET /recommendations/1` | Standard healthy execution. | `HTTP 200 OK`<br>`["Accessories", "Extended Warranty"]` in ~15ms. |
+| **Trigger Failure** | `GET /recommendations/1?fail=true` | Injects an instant `RuntimeException`. | `HTTP 200 OK (Fallback)`<br>Retries 3x, catches exception, returns `"No recommendations available at this time (Fallback)"`. |
+| **Trigger Latency** | `GET /recommendations/1?delay=3000` | Injects 3000ms delay (> 2s limit). | `HTTP 200 OK (Fallback)`<br>TimeLimiter cancels thread at 2.0s, retries, and gracefully returns fallback. |
 
 ---
 
-## Chaos Engineering & Fault Injection
+## Live Production Deployment
 
-The system includes built-in chaos endpoints to simulate real-world failure modes:
-
-| Test Case | Request Endpoint | Simulated Behavior | System Response |
-|:---|:---|:---|:---|
-| **Normal Request** | `GET /recommendation-service/recommendations/1` | Standard healthy execution | `HTTP 200 OK`<br>`["Accessories", "Extended Warranty"]` |
-| **Trigger Failure** | `GET /recommendation-service/recommendations/1?fail=true` | Server throws `RuntimeException` | `HTTP 200 OK (Fallback)`<br>`["No recommendations available at this time (Fallback)"]` |
-| **Trigger Latency** | `GET /recommendation-service/recommendations/1?delay=3000` | Injects 3000ms delay (> 2s limit) | TimeLimiter triggers timeout -> Retried -> Fallback returned (~8s duration) |
+- **Production Dashboard:** [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/)
+- **API Routing:** Handled through Vercel edge rewrites (`/gateway/*`, `/eureka-api/*`, `/zipkin/*`) forwarding to Cloudflare Ingress Tunnels.
+- **Production Status:** Fully operational with live Eureka registration, Spring Cloud Gateway routing, live Actuator statistics, and Zipkin distributed traces.
 
 ---
 
-## Distributed Tracing & Observability
+## Important Deployment Notes
 
-All backend microservices export spans to Zipkin at `http://localhost:9411/api/v2/spans` with 100% sampling probability (`management.tracing.sampling.probability=1.0`).
-
-### Verified Trace Scenarios
-1. **Normal Request Trace**:
-   - Total Spans: 3 (`api-gateway` server span, `api-gateway` client span, `recommendation-service` span)
-   - Status: `HTTP 200 OK`
-   - Latency: ~10â€“25 ms
-2. **Latency Trace**:
-   - Total Duration: `8.093s`
-   - Span Breakdown:
-     - `api-gateway`: 8.093s
-     - `gateway client`: 8.088s
-     - `recommendation-service`: 8.085s
-   - Outcome: `HTTP 200 OK` with Fallback payload, accurately capturing timeout and retry cycles in a single trace ID.
+> [!NOTE]
+> **Hybrid Edge Topology:**
+> 1. **Vercel Frontend:** Permanently hosted globally on Vercel's Edge Network.
+> 2. **Java Microservices Backend:** Runs locally in a multi-container Docker Compose network on the developer host.
+> 3. **Cloudflare Quick Tunnels:** Provide zero-cost, no-credit-card HTTPS ingress bridging Vercel edge rewrites to the local Docker containers.
+> 4. **Session Persistence:** Quick Tunnels are ephemeral and designed for portfolio demonstrations and active test sessions. The host machine and `cloudflared` terminals must remain active during live evaluations.
 
 ---
 
-## React Monitoring Dashboard
-
-The frontend dashboard provides real-time operational visibility:
-
-```text
-+-------------------------------------------------------------------------------+
-|  CIRCUITBREAKER MONITORING DASHBOARD               [SYSTEM ONLINE] [03:45 PM] |
-+-------------------------------------------------------------------------------+
-| SYSTEM OVERVIEW                                                               |
-| [ Eureka :8080 ] [ Gateway :8084 ] [ Product :8081 ] [ Inventory :8082 ] ...  |
-+------------------------------------+------------------------------------------+
-| ZIPKIN TRACING                     | RESILIENCE4J METRICS                     |
-| Status: UP (4 Services Traced)     | - Total Calls: 37                        |
-| [Open Zipkin Button]               | - Failed Calls: 17                       |
-|                                    | - Successful Calls: 20                   |
-| CIRCUIT BREAKER                    | - Not Permitted: 0                       |
-| State: CLOSED                      | - RateLimiter Available: 2               |
-| Failure Rate: 0%                   | - Bulkhead Available: 1 / 1              |
-+------------------------------------+------------------------------------------+
-| CHAOS CONTROLS                                                                |
-| [ Normal Request ]      [ Trigger Failure ]       [ Trigger Latency ]         |
-|                                                                               |
-| Last Request: Trigger Latency | Status: 200 | Duration: 8053ms                |
-| [!] Fallback activated                                                        |
-| JSON Output: { "recommendations": ["No recommendations available..."] }       |
-|                                                                               |
-| TRACE SUMMARY                                                                 |
-| Trace ID: 670d8a4f91e2b3c4                                                    |
-| Duration: 8085ms                                                              |
-| Services: api-gateway -> recommendation-service                               |
-+-------------------------------------------------------------------------------+
-```
-
----
-
-## Local Setup & Running
+## Local Installation & Setup
 
 ### Prerequisites
-- **JDK 17** installed and configured on `PATH`
+- **Java 17 (JDK)**
 - **Apache Maven 3.8+**
-- **Node.js 18+** & **npm**
-- **Docker** (for Zipkin server)
+- **Docker & Docker Compose**
+- **Node.js 18+ & npm**
 
-### Step-by-Step Startup Sequence
-
-#### Terminal 1: Start Zipkin Server
-```powershell
-docker run -d -p 9411:9411 --name zipkin openzipkin/zipkin
-# Or run standalone jar: java -jar zipkin.jar
+### 1. Clone the Repository
+```bash
+git clone https://github.com/dhanush200322/CircuitBreaker.git
+cd CircuitBreaker
 ```
 
-#### Terminal 2: Start Eureka Service Registry
-```powershell
-cd circuitbreaker-backend
-mvn -pl service-registry spring-boot:run
+### 2. Start the Backend Stack with Docker Compose
+```bash
+docker compose up --build -d
 ```
-*Wait ~10 seconds until Eureka is available on `http://localhost:8080`.*
+*This starts Eureka (8080), Zipkin (9411), Product (8081), Inventory (8082), Recommendation (8083), and Gateway (8084).*
 
-#### Terminal 3: Start Product Service
-```powershell
-cd circuitbreaker-backend
-mvn -pl product-service spring-boot:run
+Verify containers:
+```bash
+docker compose ps
 ```
 
-#### Terminal 4: Start Inventory Service
-```powershell
-cd circuitbreaker-backend
-mvn -pl inventory-service spring-boot:run
-```
-
-#### Terminal 5: Start Recommendation Service
-```powershell
-cd circuitbreaker-backend
-mvn -pl recommendation-service spring-boot:run
-```
-
-#### Terminal 6: Start API Gateway
-```powershell
-cd circuitbreaker-backend
-mvn -pl api-gateway spring-boot:run
-```
-
-#### Terminal 7: Start React Frontend Dashboard
-```powershell
+### 3. Start the Frontend Dashboard
+```bash
 cd circuitbreaker-frontend
 npm install
 npm run dev
 ```
-*Dashboard will open at `http://localhost:5173`.*
+*Access the local dashboard at `http://localhost:5173`.*
 
 ---
 
-## Verification & Testing
+## Verification & Testing Commands
 
-Verify that all services are operational using PowerShell:
+Execute these verification commands against your environment:
 
 ```powershell
-# 1. Verify Eureka Discovery
-curl.exe -s http://localhost:8080/eureka/apps
-
-# 2. Test API Gateway Routing
+# 1. Product Catalog via Gateway
 curl.exe -i http://localhost:8084/product-service/products
+
+# 2. Inventory Check via Gateway
 curl.exe -i http://localhost:8084/inventory-service/inventory/1
+
+# 3. Recommendation Service (Normal)
 curl.exe -i http://localhost:8084/recommendation-service/recommendations/1
 
-# 3. Test Chaos Failure & Fallback
+# 4. Chaos Failure & Fallback Injection
 curl.exe -i "http://localhost:8084/recommendation-service/recommendations/1?fail=true"
 
-# 4. Test Timeout & Latency Handling
+# 5. Chaos Latency & Timeout Injection
 curl.exe -i "http://localhost:8084/recommendation-service/recommendations/1?delay=3000"
 
-# 5. Verify Zipkin Traces Ingestion
+# 6. Live Resilience4j Circuit Breaker Metrics
+curl.exe -s "http://localhost:8084/recommendation-service/actuator/metrics/resilience4j.circuitbreaker.calls?tag=name:recommendationService"
+
+# 7. Eureka Service Discovery Registry
+curl.exe -s -H "Accept: application/json" http://localhost:8080/eureka/apps
+
+# 8. Zipkin Traced Services
 curl.exe -s http://localhost:9411/api/v2/services
-curl.exe -s "http://localhost:9411/api/v2/traces?serviceName=api-gateway&limit=1"
 ```
 
 ---
 
-## QA Summary
+## How I Explain This Project in an Interview
 
-| Verification Category | Status | Verified Result Summary |
-|:---|:---:|:---|
-| **Git Baseline & Integrity** | **PASS** | Clean working tree; `main` branch synchronized with remote. |
-| **Eureka Service Discovery** | **PASS** | 4 application instances registered and healthy (`UP`). |
-| **API Gateway Routing** | **PASS** | Seamless path routing across all three downstream services. |
-| **Circuit Breaker & Fallback** | **PASS** | Instant graceful degradation returning HTTP 200 fallback response. |
-| **TimeLimiter & Retries** | **PASS** | 2s timeout enforced, retries executed, graceful fallback returned. |
-| **Bulkhead & Concurrency** | **PASS** | Max 1 concurrent execution strictly enforced; excess calls handled. |
-| **Rate Limiter** | **PASS** | 2 requests per 10s quota enforced; remaining permissions visible. |
-| **Distributed Tracing** | **PASS** | Gateway-to-service span context propagation validated in Zipkin. |
-| **React Dashboard** | **PASS** | Real-time metrics polling, chaos triggers, and trace inspection active. |
-| **Build Integrity** | **PASS** | Backend multi-module Maven build and frontend Vite build compile with zero errors. |
+> *"In this project, I designed a resilient microservices architecture to solve cascading failure and latency propagation issues in distributed systems.*
+>
+> *The backend consists of five Spring Boot 3 services managed in Docker Compose. I used Netflix Eureka for dynamic service discovery and Spring Cloud Gateway as a reactive entry point that routes client traffic dynamically without hardcoded service IPs.*
+>
+> *For resilience, I implemented Resilience4j on our Recommendation Service using a defense-in-depth pipeline: Circuit Breaker, Smart Retry, and TimeLimiter timeouts. When downstream services fail or experience high latency, the system fails fast, isolates thread pools, and gracefully returns fallback payloads with an HTTP 200 rather than crashing or showing a 500 error to the client.*
+>
+> *For observability, every service exports trace spans using Micrometer and Brave into OpenZipkin, allowing us to inspect end-to-end distributed waterfall traces across network boundaries. I also built a real-time React dashboard deployed on Vercel that streams live Actuator metrics and lets you trigger chaos tests to watch the circuit breaker and distributed traces react in real time."*
 
 ---
 
-## Project Directory Structure
+## Key Project Highlights
 
-```text
-CircuitBreaker/
-â”œâ”€â”€ .gitignore
-â”œâ”€â”€ README.md
-â”œâ”€â”€ docs/
-â”‚   â”œâ”€â”€ ARCHITECTURE.md
-â”‚   â”œâ”€â”€ DEMO_GUIDE.md
-â”‚   â”œâ”€â”€ QA_REPORT.md
-â”‚   â”œâ”€â”€ INTERVIEW_GUIDE.md
-â”‚   â”œâ”€â”€ API_REFERENCE.md
-â”‚   â””â”€â”€ PROJECT_OVERVIEW.md
-â”œâ”€â”€ circuitbreaker-backend/
-â”‚   â”œâ”€â”€ pom.xml
-â”‚   â”œâ”€â”€ service-registry/
-â”‚   â”‚   â”œâ”€â”€ pom.xml
-â”‚   â”‚   â””â”€â”€ src/main/
-â”‚   â”‚       â”œâ”€â”€ java/com/circuitbreaker/serviceregistry/ServiceRegistryApplication.java
-â”‚   â”‚       â””â”€â”€ resources/application.properties
-â”‚   â”œâ”€â”€ api-gateway/
-â”‚   â”‚   â”œâ”€â”€ pom.xml
-â”‚   â”‚   â””â”€â”€ src/main/
-â”‚   â”‚       â”œâ”€â”€ java/com/circuitbreaker/apigateway/ApiGatewayApplication.java
-â”‚   â”‚       â””â”€â”€ resources/application.properties
-â”‚   â”œâ”€â”€ product-service/
-â”‚   â”‚   â”œâ”€â”€ pom.xml
-â”‚   â”‚   â””â”€â”€ src/main/
-â”‚   â”‚       â”œâ”€â”€ java/com/circuitbreaker/product/
-â”‚   â”‚       â”‚   â”œâ”€â”€ ProductServiceApplication.java
-â”‚   â”‚       â”‚   â”œâ”€â”€ ProductController.java
-â”‚   â”‚       â”‚   â””â”€â”€ ProductResponse.java
-â”‚   â”‚       â””â”€â”€ resources/application.properties
-â”‚   â”œâ”€â”€ inventory-service/
-â”‚   â”‚   â”œâ”€â”€ pom.xml
-â”‚   â”‚   â””â”€â”€ src/main/
-â”‚   â”‚       â”œâ”€â”€ java/com/circuitbreaker/inventory/
-â”‚   â”‚       â”‚   â”œâ”€â”€ InventoryServiceApplication.java
-â”‚   â”‚       â”‚   â”œâ”€â”€ InventoryController.java
-â”‚   â”‚       â”‚   â””â”€â”€ InventoryResponse.java
-â”‚   â”‚       â””â”€â”€ resources/application.properties
-â”‚   â””â”€â”€ recommendation-service/
-â”‚       â”œâ”€â”€ pom.xml
-â”‚       â””â”€â”€ src/main/
-â”‚           â”œâ”€â”€ java/com/circuitbreaker/recommendation/
-â”‚           â”‚   â”œâ”€â”€ RecommendationServiceApplication.java
-â”‚           â”‚   â”œâ”€â”€ RecommendationController.java
-â”‚           â”‚   â””â”€â”€ RecommendationResponse.java
-â”‚           â””â”€â”€ resources/application.properties
-â””â”€â”€ circuitbreaker-frontend/
-    â”œâ”€â”€ package.json
-    â”œâ”€â”€ vite.config.ts
-    â”œâ”€â”€ tailwind.config.js
-    â”œâ”€â”€ src/
-    â”‚   â”œâ”€â”€ App.tsx
-    â”‚   â”œâ”€â”€ main.tsx
-    â”‚   â”œâ”€â”€ components/
-    â”‚   â”‚   â”œâ”€â”€ Header.tsx
-    â”‚   â”‚   â”œâ”€â”€ ServiceStatusCard.tsx
-    â”‚   â”‚   â”œâ”€â”€ CircuitBreakerCard.tsx
-    â”‚   â”‚   â”œâ”€â”€ MetricsCard.tsx
-    â”‚   â”‚   â”œâ”€â”€ TracingCard.tsx
-    â”‚   â”‚   â””â”€â”€ ChaosControls.tsx
-    â”‚   â”œâ”€â”€ pages/
-    â”‚   â”‚   â””â”€â”€ Dashboard.tsx
-    â”‚   â”œâ”€â”€ services/
-    â”‚   â”‚   â””â”€â”€ api.ts
-    â”‚   â””â”€â”€ types/
-    â”‚       â””â”€â”€ resilience.ts
-    â””â”€â”€ dist/
-```
-
----
-
-## Future Improvements
-
-*(Future Work Roadmap)*
-- **Persistent Database Layer**: Integrate Spring Data JPA with PostgreSQL / MySQL to replace in-memory collections.
-- **Asynchronous Messaging**: Integrate Apache Kafka / RabbitMQ for event-driven cache invalidation.
-- **Container Orchestration**: Add Dockerfiles for all microservices and a unified `docker-compose.yml` or Kubernetes Helm charts.
-- **Centralized Configuration**: Add Spring Cloud Config Server backed by Git for dynamic property refresh.
-- **Security**: Implement OAuth2 / OpenID Connect authentication using Spring Security and Keycloak at the API Gateway.
+- **Microservices Architecture:** 5 decoupled Spring Boot 3 microservices communicating over internal Docker networking.
+- **Dynamic Service Discovery:** Netflix Eureka registration eliminating static port dependencies.
+- **Reactive Edge Gateway:** Spring Cloud Gateway with dynamic service locator routing and context propagation.
+- **Resilience4j Fault Tolerance:** Configured Circuit Breakers, Smart Retries, TimeLimiters, Bulkheads, and Fallbacks.
+- **Graceful Degradation:** Automatic fallback responses preventing client-facing errors during outages.
+- **Distributed Tracing:** B3/W3C context propagation and span waterfall analysis via OpenZipkin.
+- **Runtime Observability:** Live Spring Boot Actuator resilience metrics streamed to the UI.
+- **Interactive Chaos Engineering:** On-demand failure and latency injection controls.
+- **Production Edge Deployment:** Hybrid deployment on Vercel with Cloudflare Ingress Tunnels.
 
 ---
 
 ## Documentation Index
 
-For comprehensive technical documentation, refer to the `docs/` directory:
-- ðŸ“– [System Architecture Document](docs/ARCHITECTURE.md)
-- ðŸŽ¬ [Interactive 5-Minute Demo Script](docs/DEMO_GUIDE.md)
-- ðŸ§ª [Formal QA & Test Execution Report](docs/QA_REPORT.md)
-- ðŸ’¼ [Engineering Interview & Viva Guide](docs/INTERVIEW_GUIDE.md)
-- ðŸ“¡ [Complete API Reference Manual](docs/API_REFERENCE.md)
-- ðŸ“„ [Executive Project Overview](docs/PROJECT_OVERVIEW.md)
+- 📖 [Comprehensive Architecture Deep-Dive](docs/ARCHITECTURE.md)
+- 🎬 [3–5 Minute Video Demonstration Script](docs/VIDEO-DEMO-SCRIPT.md)
+- ✅ [Video Recording & QA Checklist](docs/VIDEO-CHECKLIST.md)
+- 📡 [Complete REST API Reference Manual](docs/API_REFERENCE.md)
+- 🧪 [Formal QA & Validation Report](docs/QA_REPORT.md)
+- 💼 [Technical Interview & Viva Preparation Guide](docs/INTERVIEW_GUIDE.md)
+
+---
+
+## License
+MIT License. Free for educational and portfolio demonstration use.
