@@ -30,7 +30,7 @@ export const Dashboard = () => {
       };
 
       setServicesStatus({
-        eureka: 'UP', // If we could fetch, Eureka is up
+        eureka: 'UP',
         apiGateway: isUp('API-GATEWAY'),
         product: isUp('PRODUCT-SERVICE'),
         inventory: isUp('INVENTORY-SERVICE'),
@@ -62,40 +62,49 @@ export const Dashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans">
+      <Header isOffline={backendOffline} lastUpdated={lastUpdated} />
       
-      <main className="flex-grow max-w-7xl mx-auto w-full p-6">
+      <main className="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 space-y-8">
+        
         {backendOffline && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
-            <strong className="font-bold">Backend Unavailable! </strong>
-            <span className="block sm:inline">Ensure the Java backend services are running.</span>
+          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-6 py-4 rounded-xl shadow-lg shadow-rose-900/20 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <strong className="block font-bold text-rose-300">SYSTEM OFFLINE</strong>
+                <span className="text-sm opacity-90">Unable to connect to backend services. Ensure the Java microservices are running.</span>
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">System Dashboard</h2>
-          <span className="text-sm text-gray-500">Last updated: {lastUpdated || 'Loading...'}</span>
-        </div>
+        <section>
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-slate-200 tracking-wide uppercase">System Overview</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <ServiceStatusCard name="Eureka Registry" port="8080" status={servicesStatus.eureka} />
+            <ServiceStatusCard name="API Gateway" port="8084" status={servicesStatus.apiGateway} />
+            <ServiceStatusCard name="Product Service" port="8081" status={servicesStatus.product} />
+            <ServiceStatusCard name="Inventory Service" port="8082" status={servicesStatus.inventory} />
+            <ServiceStatusCard name="Recommendation" port="8083" status={servicesStatus.recommendation} />
+          </div>
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
-          <ServiceStatusCard name="Eureka Registry" port="8080" status={servicesStatus.eureka} />
-          <ServiceStatusCard name="API Gateway" port="8084" status={servicesStatus.apiGateway} />
-          <ServiceStatusCard name="Product Service" port="8081" status={servicesStatus.product} />
-          <ServiceStatusCard name="Inventory Service" port="8082" status={servicesStatus.inventory} />
-          <ServiceStatusCard name="Recommendation" port="8083" status={servicesStatus.recommendation} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           <div className="lg:col-span-1">
             <CircuitBreakerCard metrics={metrics} />
           </div>
           <div className="lg:col-span-2">
             <MetricsCard metrics={metrics} />
           </div>
-        </div>
+        </section>
 
-        <ChaosControls />
+        <section>
+          <ChaosControls />
+        </section>
+        
       </main>
     </div>
   );

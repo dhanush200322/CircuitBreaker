@@ -8,12 +8,14 @@ interface ServiceStatusCardProps {
 
 export const ServiceStatusCard = ({ name, port, status }: ServiceStatusCardProps) => {
   return (
-    <div className="bg-white rounded-lg shadow p-4 border border-gray-100 flex items-center justify-between">
-      <div>
-        <h3 className="font-semibold text-gray-800">{name}</h3>
-        <p className="text-sm text-gray-500">Port: {port}</p>
+    <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-4 border border-slate-700/50 flex flex-col justify-between gap-3 hover:bg-slate-800 transition-colors shadow-lg shadow-black/20">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-semibold text-slate-200 text-sm">{name}</h3>
+          <p className="text-xs text-slate-500 font-mono mt-1">Port: {port}</p>
+        </div>
+        <StatusBadge status={status} />
       </div>
-      <StatusBadge status={status} />
     </div>
   );
 };
