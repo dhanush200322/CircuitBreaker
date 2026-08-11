@@ -22,20 +22,22 @@ export const ChaosControls = () => {
       const res = await fetchFn();
       setResult({ type: displayType, res });
       
-      // Attempt to fetch the corresponding Zipkin trace
-      setFetchingTrace(true);
-      setTrace(null);
-      // Wait briefly for Zipkin to ingest the spans
-      setTimeout(async () => {
-        try {
-          const fetchedTrace = await getRecentZipkinTrace(requestStartTime);
-          setTrace(fetchedTrace);
-        } catch (e) {
-          console.error("Trace fetch error", e);
-        } finally {
-          setFetchingTrace(false);
-        }
-      }, 1000);
+      // Attempt to fetch the corresponding Zipkin trace in local development only
+      if (!import.meta.env.PROD) {
+        setFetchingTrace(true);
+        setTrace(null);
+        // Wait briefly for Zipkin to ingest the spans
+        setTimeout(async () => {
+          try {
+            const fetchedTrace = await getRecentZipkinTrace(requestStartTime);
+            setTrace(fetchedTrace);
+          } catch (e) {
+            console.error("Trace fetch error", e);
+          } finally {
+            setFetchingTrace(false);
+          }
+        }, 1000);
+      }
 
     } catch (e: any) {
       setResult({ type: displayType, res: { status: 500, duration: 0, data: { error: e.message } } });
@@ -117,7 +119,13 @@ export const ChaosControls = () => {
               {JSON.stringify(result.res.data, null, 2)}
             </pre>
 
-            {(trace || fetchingTrace) && (
+            {import.meta.env.PROD ? (
+              <div className="mt-4 pt-4 border-t border-slate-700/50">
+                <div className="text-xs text-amber-400/80 italic font-sans">
+                  Trace summary available in local development only
+                </div>
+              </div>
+            ) : (trace || fetchingTrace) ? (
               <div className="mt-4 pt-4 border-t border-slate-700/50">
                 <h3 className="text-sm font-semibold text-indigo-400 mb-2 uppercase tracking-wide">Trace Summary</h3>
                 {fetchingTrace ? (
@@ -133,13 +141,11 @@ export const ChaosControls = () => {
                   </div>
                 ) : null}
               </div>
-            )}
-            
-            {!trace && !fetchingTrace && result && (
+            ) : !trace && !fetchingTrace && result ? (
               <div className="mt-4 pt-4 border-t border-slate-700/50">
                 <div className="text-sm text-slate-500 italic">Trace not yet available</div>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>

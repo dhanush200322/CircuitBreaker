@@ -1,9 +1,9 @@
-import { StatusBadge } from './StatusBadge';
+import { StatusBadge, type StatusType } from './StatusBadge';
 
 interface ServiceStatusCardProps {
   name: string;
   port: string;
-  status: 'UP' | 'DOWN' | 'UNKNOWN';
+  status: StatusType;
 }
 
 export const ServiceStatusCard = ({ name, port, status }: ServiceStatusCardProps) => {

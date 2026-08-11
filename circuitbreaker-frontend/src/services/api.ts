@@ -9,12 +9,16 @@ const fetchJson = async <T>(url: string, options?: RequestInit): Promise<T> => {
 };
 
 export const getEurekaApps = (): Promise<EurekaApps> => {
+  if (import.meta.env.PROD) {
+    return Promise.resolve({ applications: { application: [] } });
+  }
   return fetchJson<EurekaApps>('/eureka-api/apps', {
     headers: { 'Accept': 'application/json' }
   });
 };
 
 export const getMetric = async (metricName: string, extraTags: string = ''): Promise<number> => {
+  if (import.meta.env.PROD) return 0;
   try {
     const data = await fetchJson<MetricResponse>(`/actuator/metrics/${metricName}?tag=name:recommendationService${extraTags}`);
     return data.measurements?.[0]?.value ?? 0;
@@ -91,9 +95,10 @@ export const triggerLatencyRequest = async () => {
 };
 
 export const getZipkinServices = async (): Promise<string[]> => {
+  if (import.meta.env.PROD) return [];
   try {
     return await fetchJson<string[]>('/zipkin/api/v2/services');
-  } catch (e) {
+  } catch {
     return [];
   }
 };
@@ -109,6 +114,7 @@ export const getRecentZipkinTrace = async (
   requestStartTimeMs: number,
   serviceName: string = 'api-gateway'
 ): Promise<TraceSummary | null> => {
+  if (import.meta.env.PROD) return null;
   try {
     const traces = await fetchJson<any[][]>(`/zipkin/api/v2/traces?serviceName=${serviceName}&limit=10`);
     if (!traces || traces.length === 0) return null;

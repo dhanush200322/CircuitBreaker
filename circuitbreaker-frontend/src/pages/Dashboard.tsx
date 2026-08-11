@@ -7,34 +7,58 @@ import { ChaosControls } from '../components/ChaosControls';
 import { TracingCard } from '../components/TracingCard';
 import { getAllResilienceMetrics, getEurekaApps, getZipkinServices } from '../services/api';
 import type { ResilienceMetrics } from '../types/resilience';
+import type { StatusType } from '../components/StatusBadge';
 
 export const Dashboard = () => {
   const [metrics, setMetrics] = useState<ResilienceMetrics | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [backendOffline, setBackendOffline] = useState(false);
   const [servicesStatus, setServicesStatus] = useState({
-    eureka: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
-    apiGateway: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
-    product: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
-    inventory: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
-    recommendation: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
+    eureka: 'UNKNOWN' as StatusType,
+    apiGateway: 'UNKNOWN' as StatusType,
+    product: 'UNKNOWN' as StatusType,
+    inventory: 'UNKNOWN' as StatusType,
+    recommendation: 'UNKNOWN' as StatusType,
   });
-  const [zipkinStatus, setZipkinStatus] = useState<'UP' | 'DOWN' | 'UNKNOWN'>('UNKNOWN');
+  const [zipkinStatus, setZipkinStatus] = useState<StatusType>('UNKNOWN');
   const [tracedServices, setTracedServices] = useState<string[]>([]);
 
   const fetchData = async () => {
     try {
       if (import.meta.env.PROD) {
-        setServicesStatus({
-          eureka: 'UNKNOWN',
-          apiGateway: 'UP',
-          product: 'UP',
-          inventory: 'UP',
-          recommendation: 'UP',
-        });
+        try {
+          const res = await fetch('/gateway/product-service/products');
+          if (res.ok) {
+            setBackendOffline(false);
+            setServicesStatus({
+              eureka: 'LOCAL_ONLY',
+              apiGateway: 'UP',
+              product: 'UP',
+              inventory: 'UP',
+              recommendation: 'UP',
+            });
+          } else {
+            setBackendOffline(true);
+            setServicesStatus({
+              eureka: 'LOCAL_ONLY',
+              apiGateway: 'DOWN',
+              product: 'DOWN',
+              inventory: 'DOWN',
+              recommendation: 'DOWN',
+            });
+          }
+        } catch {
+          setBackendOffline(true);
+          setServicesStatus({
+            eureka: 'LOCAL_ONLY',
+            apiGateway: 'DOWN',
+            product: 'DOWN',
+            inventory: 'DOWN',
+            recommendation: 'DOWN',
+          });
+        }
         setMetrics(null);
-        setBackendOffline(false);
-        setZipkinStatus('UNKNOWN');
+        setZipkinStatus('LOCAL_ONLY');
         setTracedServices([]);
         setLastUpdated(new Date().toLocaleTimeString());
         return;
@@ -64,7 +88,7 @@ export const Dashboard = () => {
         const zipkinData = await getZipkinServices();
         setTracedServices(zipkinData);
         setZipkinStatus(zipkinData.length > 0 || zipkinData !== null ? 'UP' : 'DOWN');
-      } catch (e) {
+      } catch {
         setZipkinStatus('DOWN');
         setTracedServices([]);
       }
