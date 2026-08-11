@@ -4,7 +4,8 @@ import { ServiceStatusCard } from '../components/ServiceStatusCard';
 import { CircuitBreakerCard } from '../components/CircuitBreakerCard';
 import { MetricsCard } from '../components/MetricsCard';
 import { ChaosControls } from '../components/ChaosControls';
-import { getAllResilienceMetrics, getEurekaApps } from '../services/api';
+import { TracingCard } from '../components/TracingCard';
+import { getAllResilienceMetrics, getEurekaApps, getZipkinServices } from '../services/api';
 import type { ResilienceMetrics } from '../types/resilience';
 
 export const Dashboard = () => {
@@ -18,6 +19,8 @@ export const Dashboard = () => {
     inventory: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
     recommendation: 'UNKNOWN' as 'UP' | 'DOWN' | 'UNKNOWN',
   });
+  const [zipkinStatus, setZipkinStatus] = useState<'UP' | 'DOWN' | 'UNKNOWN'>('UNKNOWN');
+  const [tracedServices, setTracedServices] = useState<string[]>([]);
 
   const fetchData = async () => {
     try {
@@ -40,6 +43,15 @@ export const Dashboard = () => {
       const metricsData = await getAllResilienceMetrics();
       setMetrics(metricsData);
       setBackendOffline(false);
+
+      try {
+        const zipkinData = await getZipkinServices();
+        setTracedServices(zipkinData);
+        setZipkinStatus(zipkinData.length > 0 || zipkinData !== null ? 'UP' : 'DOWN');
+      } catch (e) {
+        setZipkinStatus('DOWN');
+        setTracedServices([]);
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
       setBackendOffline(true);
@@ -92,11 +104,12 @@ export const Dashboard = () => {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="lg:col-span-1">
+        <section className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <TracingCard status={zipkinStatus} services={tracedServices} />
             <CircuitBreakerCard metrics={metrics} />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <MetricsCard metrics={metrics} />
           </div>
         </section>

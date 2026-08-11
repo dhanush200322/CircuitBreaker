@@ -89,3 +89,76 @@ export const triggerLatencyRequest = async () => {
   const duration = Date.now() - start;
   return { status: res.status, data, duration };
 };
+
+export const getZipkinServices = async (): Promise<string[]> => {
+  try {
+    return await fetchJson<string[]>('/zipkin/api/v2/services');
+  } catch (e) {
+    return [];
+  }
+};
+
+export interface TraceSummary {
+  traceId: string;
+  durationMs: number;
+  services: string[];
+  timestamp: number;
+}
+
+export const getRecentZipkinTrace = async (
+  requestStartTimeMs: number,
+  serviceName: string = 'api-gateway'
+): Promise<TraceSummary | null> => {
+  try {
+    const traces = await fetchJson<any[][]>(`/zipkin/api/v2/traces?serviceName=${serviceName}&limit=10`);
+    if (!traces || traces.length === 0) return null;
+
+    let bestTrace = traces[0];
+    let minDiff = Number.MAX_SAFE_INTEGER;
+
+    for (const trace of traces) {
+      if (!trace || trace.length === 0) continue;
+      const rootSpan = trace.find((s: any) => !s.parentId) || trace[0];
+      const traceStartTimeMs = rootSpan.timestamp / 1000;
+      const diff = Math.abs(traceStartTimeMs - requestStartTimeMs);
+      
+      if (diff < 15000 && diff < minDiff) {
+        minDiff = diff;
+        bestTrace = trace;
+      }
+    }
+
+    if (!bestTrace || bestTrace.length === 0) return null;
+    
+    // Only return if we found a reasonably close trace (e.g. within 5 seconds)
+    if (minDiff > 5000) return null;
+
+    const rootSpan = bestTrace.find((s: any) => !s.parentId) || bestTrace[0];
+    const traceId = rootSpan.traceId;
+    const durationMs = Math.round(rootSpan.duration / 1000);
+    
+    const serviceSet = new Set<string>();
+    bestTrace.forEach((span: any) => {
+      if (span.localEndpoint?.serviceName) {
+        serviceSet.add(span.localEndpoint.serviceName);
+      }
+    });
+
+    const services = Array.from(serviceSet);
+    const orderedServices = [];
+    if (services.includes('api-gateway')) orderedServices.push('api-gateway');
+    services.forEach(s => {
+      if (s !== 'api-gateway') orderedServices.push(s);
+    });
+
+    return {
+      traceId,
+      durationMs,
+      services: orderedServices,
+      timestamp: rootSpan.timestamp / 1000
+    };
+  } catch (e) {
+    console.error('Error fetching zipkin traces:', e);
+    return null;
+  }
+};

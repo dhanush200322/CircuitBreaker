@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { triggerNormalRequest, triggerFailureRequest, triggerLatencyRequest } from '../services/api';
+import { triggerNormalRequest, triggerFailureRequest, triggerLatencyRequest, getRecentZipkinTrace } from '../services/api';
+import type { TraceSummary } from '../services/api';
 
 interface RequestResult {
   status: number;
@@ -10,13 +11,32 @@ interface RequestResult {
 export const ChaosControls = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [result, setResult] = useState<{ type: string; res: RequestResult } | null>(null);
+  const [trace, setTrace] = useState<TraceSummary | null>(null);
+  const [fetchingTrace, setFetchingTrace] = useState(false);
 
   const handleRequest = async (type: string, fetchFn: () => Promise<RequestResult>, displayType: string) => {
     setLoading(type);
     setResult(null);
     try {
+      const requestStartTime = Date.now();
       const res = await fetchFn();
       setResult({ type: displayType, res });
+      
+      // Attempt to fetch the corresponding Zipkin trace
+      setFetchingTrace(true);
+      setTrace(null);
+      // Wait briefly for Zipkin to ingest the spans
+      setTimeout(async () => {
+        try {
+          const fetchedTrace = await getRecentZipkinTrace(requestStartTime);
+          setTrace(fetchedTrace);
+        } catch (e) {
+          console.error("Trace fetch error", e);
+        } finally {
+          setFetchingTrace(false);
+        }
+      }, 1000);
+
     } catch (e: any) {
       setResult({ type: displayType, res: { status: 500, duration: 0, data: { error: e.message } } });
     } finally {
@@ -96,6 +116,30 @@ export const ChaosControls = () => {
             <pre className="text-sm text-slate-300 bg-black/30 p-3 rounded overflow-auto max-h-40 font-mono scrollbar-thin">
               {JSON.stringify(result.res.data, null, 2)}
             </pre>
+
+            {(trace || fetchingTrace) && (
+              <div className="mt-4 pt-4 border-t border-slate-700/50">
+                <h3 className="text-sm font-semibold text-indigo-400 mb-2 uppercase tracking-wide">Trace Summary</h3>
+                {fetchingTrace ? (
+                  <div className="text-sm text-slate-400 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-indigo-500 animate-ping" />
+                    Waiting for Zipkin ingestion...
+                  </div>
+                ) : trace ? (
+                  <div className="bg-slate-800/80 rounded p-3 text-sm text-slate-300 font-mono space-y-1 border border-slate-700">
+                    <div><span className="text-slate-500">Trace ID:</span> <span className="text-indigo-300">{trace.traceId}</span></div>
+                    <div><span className="text-slate-500">Duration:</span> {trace.durationMs}ms</div>
+                    <div><span className="text-slate-500">Services:</span> <span className="text-emerald-400">{trace.services.join(' → ')}</span></div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+            
+            {!trace && !fetchingTrace && result && (
+              <div className="mt-4 pt-4 border-t border-slate-700/50">
+                <div className="text-sm text-slate-500 italic">Trace not yet available</div>
+              </div>
+            )}
           </div>
         )}
       </div>

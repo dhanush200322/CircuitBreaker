@@ -1,0 +1,61 @@
+import React from 'react';
+
+interface TracingCardProps {
+  status: 'UP' | 'DOWN' | 'UNKNOWN';
+  services: string[];
+}
+
+export const TracingCard: React.FC<TracingCardProps> = ({ status, services }) => {
+  const isUp = status === 'UP';
+  
+  return (
+    <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-5 border border-slate-700/50 shadow-lg shadow-black/20 flex flex-col h-full">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">
+            Zipkin Tracing
+          </h3>
+          <div className="flex items-center gap-2">
+            <div className={`w-2.5 h-2.5 rounded-full ${isUp ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : status === 'DOWN' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-slate-500'}`} />
+            <span className="text-xl font-bold text-slate-100">
+              {status}
+            </span>
+          </div>
+        </div>
+        
+        {isUp && (
+          <button 
+            onClick={() => window.open('http://localhost:9411', '_blank')}
+            className="text-xs bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40 hover:text-indigo-200 px-3 py-1.5 rounded-md transition-colors border border-indigo-500/30 flex items-center gap-1.5 font-medium"
+          >
+            <span>Open Zipkin</span>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </button>
+        )}
+      </div>
+
+      <div className="mt-2 flex-grow">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-slate-400">Traced Services</span>
+          <span className="text-sm font-mono text-indigo-300 bg-indigo-500/10 px-2 rounded">
+            {services.length}
+          </span>
+        </div>
+        
+        {services.length > 0 ? (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {services.map(svc => (
+              <span key={svc} className="text-xs px-2 py-1 bg-slate-700/50 border border-slate-600/50 text-slate-300 rounded shadow-sm">
+                {svc}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-slate-500 italic mt-3 bg-slate-900/50 p-2 rounded text-center border border-slate-800">
+            {isUp ? "No services registered yet" : "Tracing offline"}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

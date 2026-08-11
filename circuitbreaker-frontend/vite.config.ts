@@ -23,6 +23,11 @@ export default defineConfig({
         headers: {
           'Accept': 'application/json'
         }
+      },
+      '/zipkin': {
+        target: 'http://localhost:9411',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/zipkin/, '')
       }
     }
   }
