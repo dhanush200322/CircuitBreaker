@@ -18,7 +18,9 @@ A cloud-native microservices platform built to demonstrate enterprise-grade faul
 
 > Full video demonstration of the CircuitBreaker microservices architecture, live chaos testing, failure fallbacks, and distributed tracing.
 
-[Watch the full project demonstration](https://github.com/dhanush200322/CircuitBreaker/blob/main/circuitbreaker-frontend/videos/0811.mp4)
+https://github.com/dhanush200322/CircuitBreaker/raw/main/circuitbreaker-frontend/videos/0811.mp4
+
+[**📥 Download the Video (84 MB)**](https://github.com/dhanush200322/CircuitBreaker/raw/main/circuitbreaker-frontend/videos/0811.mp4)
 
 *For the complete spoken walkthrough and presentation guide, see [`docs/VIDEO-DEMO-SCRIPT.md`](docs/VIDEO-DEMO-SCRIPT.md).*
 
