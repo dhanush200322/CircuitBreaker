@@ -24,6 +24,22 @@ export const Dashboard = () => {
 
   const fetchData = async () => {
     try {
+      if (import.meta.env.PROD) {
+        setServicesStatus({
+          eureka: 'UNKNOWN',
+          apiGateway: 'UP',
+          product: 'UP',
+          inventory: 'UP',
+          recommendation: 'UP',
+        });
+        setMetrics(null);
+        setBackendOffline(false);
+        setZipkinStatus('UNKNOWN');
+        setTracedServices([]);
+        setLastUpdated(new Date().toLocaleTimeString());
+        return;
+      }
+
       const eurekaData = await getEurekaApps();
       const apps = eurekaData.applications.application || [];
       
@@ -86,6 +102,18 @@ export const Dashboard = () => {
               <div>
                 <strong className="block font-bold text-rose-300">SYSTEM OFFLINE</strong>
                 <span className="text-sm opacity-90">Unable to connect to backend services. Ensure the Java microservices are running.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {import.meta.env.PROD && !backendOffline && (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-6 py-4 rounded-xl shadow-lg shadow-amber-900/20 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-2xl">ℹ️</span>
+              <div>
+                <strong className="block font-bold text-amber-300">PUBLIC DEMO MODE</strong>
+                <span className="text-sm opacity-90">Observability unavailable in public demo. Eureka, Zipkin, and Actuator metrics are disabled for security.</span>
               </div>
             </div>
           </div>

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  service-registry:
+    image: circuitbreaker-service-registry:latest
+    ports:
+      - "8080:8080"
+
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+
+  product-service:
+    image: circuitbreaker-product-service:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - service-registry
+      - zipkin
+
+  inventory-service:
+    image: circuitbreaker-inventory-service:latest
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - service-registry
+      - zipkin
+
+  recommendation-service:
+    image: circuitbreaker-recommendation-service:latest
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - service-registry
+      - zipkin
+
+  api-gateway:
+    image: circuitbreaker-api-gateway:latest
+    ports:
+      - "8084:8084"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - service-registry
+      - product-service
+      - inventory-service
+      - recommendation-service
+      - zipkin
