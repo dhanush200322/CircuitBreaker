@@ -302,6 +302,7 @@ curl.exe -s http://localhost:9411/api/v2/services
 
 ## Documentation Index
 
+- 🛠️ [Production Operations & Commands Runbook](docs/RUNBOOK.md)
 - 📖 [Comprehensive Architecture Deep-Dive](docs/ARCHITECTURE.md)
 - 🎬 [3–5 Minute Video Demonstration Script](docs/VIDEO-DEMO-SCRIPT.md)
 - ✅ [Video Recording & QA Checklist](docs/VIDEO-CHECKLIST.md)
