@@ -3,23 +3,23 @@
   "rewrites": [
     {
       "source": "/gateway/:path*",
-      "destination": "https://scholars-attachment-social-respond.trycloudflare.com/:path*"
+      "destination": "https://gage-rep-proposition-orchestra.trycloudflare.com/:path*"
     },
     {
       "source": "/eureka-api/:path*",
-      "destination": "https://expected-racks-edt-print.trycloudflare.com/eureka/:path*"
+      "destination": "https://modified-collectors-homework-infant.trycloudflare.com/eureka/:path*"
     },
     {
       "source": "/zipkin",
-      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/"
+      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/"
     },
     {
       "source": "/zipkin/",
-      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/"
+      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/"
     },
     {
       "source": "/zipkin/:path+",
-      "destination": "https://heavy-piece-prime-sleeping.trycloudflare.com/zipkin/:path+"
+      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/:path+"
     }
   ]
 }
