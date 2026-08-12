@@ -194,14 +194,16 @@ The platform provides built-in query parameters and dedicated UI controls to inj
 
 ---
 
-## Important Deployment Notes
+## Important Deployment Notes (Zero-Cost Portfolio Demo)
 
 > [!NOTE]
 > **Hybrid Edge Topology:**
 > 1. **Vercel Frontend:** Permanently hosted globally on Vercel's Edge Network.
 > 2. **Java Microservices Backend:** Runs locally in a multi-container Docker Compose network on the developer host.
 > 3. **Cloudflare Quick Tunnels:** Provide zero-cost, no-credit-card HTTPS ingress bridging Vercel edge rewrites to the local Docker containers.
-> 4. **Session Persistence:** Quick Tunnels are ephemeral and designed for portfolio demonstrations and active test sessions. The host machine and `cloudflared` terminals must remain active during live evaluations.
+> 4. **Stateless Backend:** The application currently runs entirely in-memory and has no production database, making local resets trivial.
+> 5. **Session Persistence:** Because this is a zero-cost portfolio demo, the host machine, Docker Desktop, and `cloudflared` terminals **must be running** during live evaluations by a recruiter. 
+> 6. **Future Scalability:** The project is container-ready and can be instantly migrated to a persistent Linux VPS or Cloud Provider if permanent 24/7 availability is required in the future.
 
 ---
 
