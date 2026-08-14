@@ -3,23 +3,24 @@
   "rewrites": [
     {
       "source": "/gateway/:path*",
-      "destination": "https://gage-rep-proposition-orchestra.trycloudflare.com/:path*"
+      "destination": "https://circuitbreaker-1.onrender.com/:path*"
     },
     {
       "source": "/eureka-api/:path*",
-      "destination": "https://modified-collectors-homework-infant.trycloudflare.com/eureka/:path*"
+      "destination": "https://circuitbreaker-1.onrender.com/eureka/:path*"
     },
     {
       "source": "/zipkin",
-      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/"
+      "destination": "https://circuitbreaker-1.onrender.com/zipkin/"
     },
     {
       "source": "/zipkin/",
-      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/"
+      "destination": "https://circuitbreaker-1.onrender.com/zipkin/"
     },
     {
       "source": "/zipkin/:path+",
-      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/:path+"
+      "destination": "https://circuitbreaker-1.onrender.com/zipkin/:path+"
     }
   ]
 }
+
