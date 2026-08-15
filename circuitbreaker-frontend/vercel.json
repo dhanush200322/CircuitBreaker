@@ -20,9 +20,18 @@
     {
       "source": "/eureka-api/(.*)",
       "destination": "https://circuitbreaker-eureka.onrender.com/eureka/$1"
+    },
+    {
+      "source": "/zipkin",
+      "destination": "https://circuitbreaker-gateway.onrender.com/zipkin/"
+    },
+    {
+      "source": "/zipkin/(.*)",
+      "destination": "https://circuitbreaker-gateway.onrender.com/zipkin/$1"
     }
   ]
 }
+
 
 
 
