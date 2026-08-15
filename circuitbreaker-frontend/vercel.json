@@ -2,26 +2,27 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/gateway/product-service/:path*",
+      "destination": "https://circuitbreaker-product.onrender.com/:path*"
+    },
+    {
+      "source": "/gateway/inventory-service/:path*",
+      "destination": "https://circuitbreaker-inventory.onrender.com/:path*"
+    },
+    {
+      "source": "/gateway/recommendation-service/:path*",
+      "destination": "https://circuitbreaker-recommendation.onrender.com/:path*"
+    },
+    {
       "source": "/gateway/:path*",
       "destination": "https://circuitbreaker-gateway.onrender.com/:path*"
     },
     {
       "source": "/eureka-api/:path*",
       "destination": "https://circuitbreaker-eureka.onrender.com/eureka/:path*"
-    },
-    {
-      "source": "/zipkin",
-      "destination": "https://circuitbreaker-gateway.onrender.com/zipkin/"
-    },
-    {
-      "source": "/zipkin/",
-      "destination": "https://circuitbreaker-gateway.onrender.com/zipkin/"
-    },
-    {
-      "source": "/zipkin/:path+",
-      "destination": "https://circuitbreaker-gateway.onrender.com/zipkin/:path+"
     }
   ]
 }
+
 
 
