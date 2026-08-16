@@ -28,22 +28,25 @@ export const Dashboard = () => {
       const eurekaData = await getEurekaApps();
       const apps = eurekaData.applications?.application || [];
       
-      const isUp = (appName: string) => {
+      const isUpInEureka = (appName: string) => {
         const app = apps.find((a: any) => a.name === appName);
-        return app?.instance?.[0]?.status === 'UP' ? 'UP' : 'DOWN';
+        return app?.instance?.[0]?.status === 'UP';
       };
+
+      const metricsData = await getAllResilienceMetrics();
+      const hasMetrics = metricsData !== null;
 
       setServicesStatus({
         eureka: 'UP',
-        apiGateway: isUp('API-GATEWAY'),
-        product: isUp('PRODUCT-SERVICE'),
-        inventory: isUp('INVENTORY-SERVICE'),
-        recommendation: isUp('RECOMMENDATION-SERVICE'),
+        apiGateway: isUpInEureka('API-GATEWAY') || hasMetrics ? 'UP' : 'DOWN',
+        product: isUpInEureka('PRODUCT-SERVICE') || hasMetrics ? 'UP' : 'DOWN',
+        inventory: isUpInEureka('INVENTORY-SERVICE') || hasMetrics ? 'UP' : 'DOWN',
+        recommendation: isUpInEureka('RECOMMENDATION-SERVICE') || hasMetrics ? 'UP' : 'DOWN',
       });
 
-      const metricsData = await getAllResilienceMetrics();
       setMetrics(metricsData);
       setBackendOffline(false);
+
 
       try {
         const zipkinData = await getZipkinServices();
