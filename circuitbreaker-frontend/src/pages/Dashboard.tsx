@@ -45,6 +45,8 @@ export const Dashboard = () => {
       setMetrics(metricsData);
       setBackendOffline(false);
 
+
+
       try {
         const zipkinData = await getZipkinServices();
         setTracedServices(zipkinData);
