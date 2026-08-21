@@ -194,4 +194,58 @@ export const warmupAllServices = async (): Promise<void> => {
   );
 };
 
+/** Fetch a URL and return body, status, latency, and any error — never throws */
+export const fetchWithLatency = async (url: string, options?: RequestInit) => {
+  const start = Date.now();
+  try {
+    const res = await fetch(url, options);
+    const latencyMs = Date.now() - start;
+    let data: any = null;
+    try { data = await res.json(); } catch { /* non-JSON body */ }
+    return { ok: res.ok, status: res.status, latencyMs, data, error: null };
+  } catch (e: any) {
+    return { ok: false, status: null, latencyMs: Date.now() - start, data: null, error: e.message || 'Network error' };
+  }
+};
+
+/** Ping a service URL and return health info */
+export const checkServiceHealth = async (name: string, url: string) => {
+  const start = Date.now();
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    const latencyMs = Date.now() - start;
+    const status: 'UP' | 'DOWN' = res.ok ? 'UP' : 'DOWN';
+    return { name, status, latencyMs, lastChecked: new Date().toLocaleTimeString(), error: status === 'DOWN' ? `HTTP ${res.status}` : undefined };
+  } catch (e: any) {
+    return { name, status: 'DOWN' as const, latencyMs: null, lastChecked: new Date().toLocaleTimeString(), error: e.message || 'Unreachable' };
+  }
+};
+
+/** Trigger a request to product-service via gateway */
+export const triggerProductRequest = async () => {
+  const url = '/gateway/product-service/products';
+  const start = Date.now();
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return { status: res.status, data, duration: Date.now() - start, error: null };
+  } catch (e: any) {
+    return { status: null, data: null, duration: Date.now() - start, error: e.message };
+  }
+};
+
+/** Trigger a request to inventory-service via gateway */
+export const triggerInventoryRequest = async () => {
+  const url = '/gateway/inventory-service/inventory/1';
+  const start = Date.now();
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return { status: res.status, data, duration: Date.now() - start, error: null };
+  } catch (e: any) {
+    return { status: null, data: null, duration: Date.now() - start, error: e.message };
+  }
+};
+
+
 
