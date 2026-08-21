@@ -5,7 +5,7 @@ import { CircuitBreakerCard } from '../components/CircuitBreakerCard';
 import { MetricsCard } from '../components/MetricsCard';
 import { ChaosControls } from '../components/ChaosControls';
 import { TracingCard } from '../components/TracingCard';
-import { getAllResilienceMetrics, getEurekaApps, getZipkinServices } from '../services/api';
+import { getAllResilienceMetrics, getEurekaApps, getZipkinServices, warmupAllServices } from '../services/api';
 import type { ResilienceMetrics } from '../types/resilience';
 import type { StatusType } from '../components/StatusBadge';
 
@@ -45,8 +45,6 @@ export const Dashboard = () => {
       setMetrics(metricsData);
       setBackendOffline(false);
 
-
-
       try {
         const zipkinData = await getZipkinServices();
         setTracedServices(zipkinData);
@@ -73,6 +71,8 @@ export const Dashboard = () => {
   };
 
   useEffect(() => {
+    // Send background warm-up pings to all microservices on Render on initial page load
+    warmupAllServices();
     fetchData();
     const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
