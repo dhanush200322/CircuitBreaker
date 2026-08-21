@@ -2,18 +2,6 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/gateway/product-service/(.*)",
-      "destination": "https://circuitbreaker-product.onrender.com/$1"
-    },
-    {
-      "source": "/gateway/inventory-service/(.*)",
-      "destination": "https://circuitbreaker-inventory.onrender.com/$1"
-    },
-    {
-      "source": "/gateway/recommendation-service/(.*)",
-      "destination": "https://circuitbreaker-recommendation.onrender.com/$1"
-    },
-    {
       "source": "/gateway/(.*)",
       "destination": "https://circuitbreaker-gateway.onrender.com/$1"
     },
