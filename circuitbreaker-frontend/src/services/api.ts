@@ -177,3 +177,21 @@ export const getRecentZipkinTrace = async (
   }
 };
 
+export const warmupAllServices = async (): Promise<void> => {
+  const warmupEndpoints = [
+    '/eureka-api/apps',
+    '/gateway/actuator/health',
+    '/gateway/product-service/products',
+    '/gateway/inventory-service/inventory/1',
+    '/gateway/recommendation-service/recommendations/1',
+    '/zipkin/api/v2/services'
+  ];
+
+  await Promise.allSettled(
+    warmupEndpoints.map(url =>
+      fetch(url, { cache: 'no-store' }).catch(() => null)
+    )
+  );
+};
+
+
