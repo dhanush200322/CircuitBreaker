@@ -69,7 +69,9 @@ export const Dashboard = () => {
 
       const isUp = (appName: string): StatusType => {
         const app = apps.find((a: any) => a.name === appName);
-        return app?.instance?.[0]?.status === 'UP' ? 'UP' : 'DOWN';
+        if (!app || !app.instance) return 'DOWN';
+        const instances = Array.isArray(app.instance) ? app.instance : [app.instance];
+        return instances.some((inst: any) => inst?.status === 'UP') ? 'UP' : 'DOWN';
       };
 
       // 3. Per-service latency checks in parallel
