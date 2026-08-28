@@ -82,7 +82,7 @@ CircuitBreaker addresses these challenges by implementing an end-to-end resilien
 2. **Graceful Fallback**: Intercepts unhandled exceptions and timeouts to return a clean, static fallback payload (`HTTP 200 OK`) preventing client errors.
 3. **Smart Retry**: Automatically attempts up to 3 execution attempts with 1-second backoff intervals for transient exceptions.
 4. **TimeLimiter (Timeout)**: Enforces a strict 2.0-second asynchronous boundary on CompletableFuture executions to prevent thread blocking.
-5. **Rate Limiter**: Enforces a 2-request quota per 10-second refresh period to defend downstream dependencies from traffic bursts.
+5. **Rate Limiter**: Enforces a 5-request quota per 1-second refresh period to defend downstream dependencies from traffic bursts.
 6. **Bulkhead**: Restricts concurrent executions to a maximum of 1 active call, isolating CPU/memory resources and rejecting excess concurrency with instant fallback.
 
 ---
