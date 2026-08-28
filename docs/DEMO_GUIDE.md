@@ -148,7 +148,7 @@ This document provides a step-by-step presentation and live demo script for show
 > *"Our dashboard continuously polls Spring Boot Actuator endpoints every 3 seconds to reflect live metrics:*
 > - *`resilience4j.circuitbreaker.state`: Reflects the current state (Closed / Open / Half-Open).*
 > - *`resilience4j.circuitbreaker.calls`: Shows successful vs. failed call counts.*
-> - *`resilience4j.ratelimiter.available.permissions`: Tracks our 2-request quota per 10-second period.*
+> - *`resilience4j.ratelimiter.available.permissions`: Tracks our 5-request quota per 1-second period.*
 > - *`resilience4j.bulkhead.available.concurrent.calls`: Tracks concurrent thread availability.*
 >
 > *Everything is dynamic, reactive, and driven directly by standard Micrometer metrics."*
