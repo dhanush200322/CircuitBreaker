@@ -25,6 +25,25 @@ export const getMetric = async (metricName: string, extraTags: string = ''): Pro
 };
 
 export const getAllResilienceMetrics = async (): Promise<ResilienceMetrics> => {
+  try {
+    const summary = await fetchJson<any>('/gateway/recommendation-service/recommendations/resilience-summary');
+    if (summary && typeof summary.circuitBreakerStateValue === 'number') {
+      return {
+        circuitBreakerState: summary.circuitBreakerStateValue,
+        circuitBreakerStateValue: summary.circuitBreakerStateValue,
+        failedCalls: summary.failedCalls ?? 0,
+        notPermittedCalls: summary.notPermittedCalls ?? 0,
+        failureRate: summary.failureRate >= 0 ? summary.failureRate : 0,
+        retryCalls: summary.retryCalls ?? 0,
+        timeoutCalls: summary.timeoutCalls ?? 0,
+        rateLimiterAvailable: summary.rateLimiterAvailable ?? 5,
+        bulkheadAvailable: summary.bulkheadAvailable ?? 1,
+      };
+    }
+  } catch {
+    // Fall back to legacy individual actuator metric calls
+  }
+
   const [
     _isClosed,
     isOpen,
