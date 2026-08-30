@@ -59,8 +59,8 @@ const TraceRow = ({ trace, zipkinUp }: { trace: TraceSummary; zipkinUp: boolean 
   };
 
   const zipkinUrl = import.meta.env.PROD
-    ? `https://circuitbreaker-zipkin.onrender.com/zipkin/trace/${trace.traceId}`
-    : `http://localhost:9411/trace/${trace.traceId}`;
+    ? 'https://circuitbreaker-zipkin.onrender.com/zipkin/'
+    : 'http://localhost:9411';
 
   return (
     <div className="mt-4 pt-4 border-t border-slate-700/50">
