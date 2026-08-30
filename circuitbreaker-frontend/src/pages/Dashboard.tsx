@@ -132,6 +132,15 @@ export const Dashboard = () => {
     }
   }, []);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await warmupAllServices();
+    await fetchData();
+    setIsRefreshing(false);
+  };
+
   useEffect(() => {
     // Send background warm-up pings to all microservices on Render on initial page load
     warmupAllServices();
@@ -168,16 +177,19 @@ export const Dashboard = () => {
           </div>
         )}
 
-        {/* System Overview */}
-        <section aria-label="System Overview">
-          <div className="mb-4 flex justify-between items-center">
+        <section>
+          <div className="mb-4 flex justify-between items-center flex-wrap gap-2">
             <h2 className="text-lg font-bold text-slate-200 tracking-wide uppercase">System Overview</h2>
             <button
-              onClick={fetchData}
-              className="text-xs px-3 py-1.5 rounded border border-slate-600 text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors"
-              aria-label="Refresh service status"
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh system status"
+              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ↻ Refresh
+              <svg className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
