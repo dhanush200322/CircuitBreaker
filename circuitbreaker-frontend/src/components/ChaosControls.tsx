@@ -59,7 +59,7 @@ const TraceRow = ({ trace, zipkinUp }: { trace: TraceSummary; zipkinUp: boolean 
   };
 
   const zipkinUrl = import.meta.env.PROD
-    ? `/zipkin/trace/${trace.traceId}`
+    ? `https://circuitbreaker-zipkin.onrender.com/zipkin/trace/${trace.traceId}`
     : `http://localhost:9411/trace/${trace.traceId}`;
 
   return (

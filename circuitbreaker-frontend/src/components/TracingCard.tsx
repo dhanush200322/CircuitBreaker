@@ -45,7 +45,7 @@ export const TracingCard: React.FC<TracingCardProps> = ({ status, services }) =>
         
         <button
           onClick={() => {
-            const url = import.meta.env.PROD ? '/zipkin' : 'http://localhost:9411';
+            const url = import.meta.env.PROD ? 'https://circuitbreaker-zipkin.onrender.com/zipkin/' : 'http://localhost:9411';
             window.open(url, '_blank');
           }}
           disabled={!isUp}
