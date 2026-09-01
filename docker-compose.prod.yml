@@ -1,0 +1,202 @@
+version: '3.8'
+
+# =============================================================================
+# CircuitBreaker — Production Docker Compose Stack
+# Target: Oracle Cloud Always Free ARM64 (Ampere A1 — 2 OCPU / 12 GB RAM)
+# Ingress: Cloudflare Named Tunnel (Private Network, No Exposed Host Ports)
+# =============================================================================
+
+networks:
+  circuitbreaker-net:
+    driver: bridge
+    name: circuitbreaker-net
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Netflix Eureka Service Registry
+  # ---------------------------------------------------------------------------
+  service-registry:
+    build:
+      context: ./circuitbreaker-backend
+      dockerfile: service-registry/Dockerfile.prod
+    image: circuitbreaker-service-registry:prod
+    container_name: cb-service-registry
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/eureka/apps > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - circuitbreaker-net
+
+  # ---------------------------------------------------------------------------
+  # 2. OpenZipkin Distributed Tracing Server
+  # ---------------------------------------------------------------------------
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: cb-zipkin
+    restart: unless-stopped
+    expose:
+      - "9411"
+    environment:
+      - JAVA_OPTS=-Xms128m -Xmx384m -XX:+ExitOnOutOfMemoryError
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9411/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - circuitbreaker-net
+
+  # ---------------------------------------------------------------------------
+  # 3. Product Catalog Microservice (Internal Only)
+  # ---------------------------------------------------------------------------
+  product-service:
+    build:
+      context: ./circuitbreaker-backend
+      dockerfile: product-service/Dockerfile.prod
+    image: circuitbreaker-product-service:prod
+    container_name: cb-product-service
+    restart: unless-stopped
+    expose:
+      - "8081"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - circuitbreaker-net
+
+  # ---------------------------------------------------------------------------
+  # 4. Inventory Microservice (Internal Only)
+  # ---------------------------------------------------------------------------
+  inventory-service:
+    build:
+      context: ./circuitbreaker-backend
+      dockerfile: inventory-service/Dockerfile.prod
+    image: circuitbreaker-inventory-service:prod
+    container_name: cb-inventory-service
+    restart: unless-stopped
+    expose:
+      - "8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - circuitbreaker-net
+
+  # ---------------------------------------------------------------------------
+  # 5. Recommendation Microservice with Resilience4j (Internal Only)
+  # ---------------------------------------------------------------------------
+  recommendation-service:
+    build:
+      context: ./circuitbreaker-backend
+      dockerfile: recommendation-service/Dockerfile.prod
+    image: circuitbreaker-recommendation-service:prod
+    container_name: cb-recommendation-service
+    restart: unless-stopped
+    expose:
+      - "8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xms192m -Xmx384m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - circuitbreaker-net
+
+  # ---------------------------------------------------------------------------
+  # 6. Spring Cloud API Gateway (Routing Ingress)
+  # ---------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: ./circuitbreaker-backend
+      dockerfile: api-gateway/Dockerfile.prod
+    image: circuitbreaker-api-gateway:prod
+    container_name: cb-api-gateway
+    restart: unless-stopped
+    expose:
+      - "8084"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8080/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8084/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - circuitbreaker-net
+
+  # ---------------------------------------------------------------------------
+  # 7. Cloudflare Named Tunnel Agent (Secure Ingress — Zero Open Host Ports)
+  # ---------------------------------------------------------------------------
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cb-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    networks:
+      - circuitbreaker-net

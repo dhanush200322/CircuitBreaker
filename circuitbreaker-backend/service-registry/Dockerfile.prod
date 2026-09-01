@@ -1,0 +1,29 @@
+# -----------------------------------------------------------------------------
+# CircuitBreaker Service Registry — Production Multi-Stage Dockerfile
+# Multi-Arch Support: linux/arm64 (Oracle Ampere A1), linux/amd64
+# -----------------------------------------------------------------------------
+
+# Stage 1: Build executable JAR from source
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS builder
+WORKDIR /build
+
+# Copy source tree (.dockerignore excludes target/ and .git for lightning fast context)
+COPY . .
+
+# Build service-registry artifact
+RUN mvn clean package -pl service-registry -am -DskipTests
+
+# Stage 2: Minimal JRE 17 Runtime
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# Run as non-root user for production security
+RUN addgroup -S cbgroup && adduser -S cbuser -G cbgroup
+
+COPY --from=builder --chown=cbuser:cbgroup /build/service-registry/target/*.jar app.jar
+
+USER cbuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

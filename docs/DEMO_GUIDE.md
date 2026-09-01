@@ -1,180 +1,110 @@
-# CircuitBreaker â€” Professional 5â€“10 Minute Demonstration Script
+# CircuitBreaker — Complete 4-Week Final Demonstration Guide
 
-This document provides a step-by-step presentation and live demo script for showcasing the **CircuitBreaker** cloud-native resilience and distributed tracing platform during technical interviews, portfolio walkthroughs, or stakeholder reviews.
-
----
-
-## Presentation Outline
-
-| Step | Topic | Target Duration | Key Visual / Action |
-|:---:|:---|:---:|:---|
-| **1** | Elevator Pitch & Problem Statement | 45 seconds | Dashboard Header & Architecture Overview |
-| **2** | Microservice Topology & Discovery | 1 minute | Service Status Cards (Eureka, Gateway, Microservices) |
-| **3** | Happy Path: Normal Request Flow | 1 minute | Click **Normal Request** & inspect JSON output |
-| **4** | Chaos Test 1: Controlled Failure & Fallback | 1.5 minutes | Click **Trigger Failure** & observe graceful degradation |
-| **5** | Chaos Test 2: Latency Simulation & TimeLimiter | 1.5 minutes | Click **Trigger Latency** & observe timeout / ~8s duration |
-| **6** | Concurrency Isolation: Bulkhead Pattern | 1 minute | Concurrency metrics & Bulkhead slot saturation |
-| **7** | Distributed Tracing in Zipkin | 1.5 minutes | Click **Open Zipkin** & inspect multi-span trace hierarchy |
-| **8** | Real-Time Metrics & Observability | 1 minute | Resilience4j Metrics Card (Failure Rate, Call Counts) |
-| **9** | Conclusion & Key Takeaways | 45 seconds | Closing statement on architectural robustness |
+This document provides a step-by-step presentation script and live demonstration guide for showcasing the **CircuitBreaker** platform during the **Axlero 4-Week Final Project Review**, technical interviews, or stakeholder presentations.
 
 ---
 
-## 1. Introduction (30â€“45 Seconds)
+## 4-Week Demonstration Sequence Summary (16 Steps)
 
-> *"Hello everyone. Today I am presenting **CircuitBreaker**, a cloud-native microservices platform built with **Spring Boot 3**, **Spring Cloud Gateway**, **Netflix Eureka**, and **Resilience4j**, paired with a modern **React monitoring dashboard** and **Zipkin distributed tracing**.*
->
-> *In distributed architectures, inter-service network calls can fail, experience sudden latency spikes, or exhaust thread pools, leading to cascading system-wide outages. This project demonstrates how we can implement six core resilience patternsâ€”**Circuit Breaker, Fallback, Retry, TimeLimiter, RateLimiter, and Bulkhead**â€”to build a self-healing system that guarantees high availability and graceful degradation even under severe chaos conditions."*
-
----
-
-## 2. Architecture & Service Topology (1 Minute)
-
-*(Point to the **System Overview** section at the top of the React Dashboard)*
-
-> *"Here on the dashboard, we have real-time visibility into all backend components:*
-> 1. *Our **Eureka Service Registry** running on port `8080`, providing dynamic instance discovery.*
-> 2. *Our **Spring Cloud API Gateway** on port `8084`, acting as the single ingress point using non-blocking reactive routing.*
-> 3. *Our core domain microservices: **Product Service** (`:8081`) and **Inventory Service** (`:8082`).*
-> 4. *Our **Recommendation Service** on port `8083`, which acts as the resilience testbed.*
-> 5. *Our **Zipkin Distributed Tracing Server** on port `9411`.*
->
-> *All requests initiated by the user flow through the API Gateway, which dynamically locates the appropriate service using Eureka and passes distributed trace context headers throughout the entire execution lifecycle."*
-
----
-
-## 3. Normal Request Flow (1 Minute)
-
-*(Scroll down to the **Chaos Controls** section and click **Normal Request**)*
-
-> *"Let's test the baseline happy path. I'll click **Normal Request**."*
->
-> - **Action**: Click the blue `Normal Request` button.
-> - **What happens**:
->   - Request sent: `GET http://localhost:8084/recommendation-service/recommendations/1`
->   - Response time: ~10â€“25 ms.
->   - Status: `HTTP 200 OK`.
->   - Response Payload:
->     ```json
->     {
->       "productId": "1",
->       "recommendations": ["Accessories", "Extended Warranty"]
->     }
->     ```
-> - **Trace Summary Box**:
->   - Shows `Trace ID`, `Duration: ~15ms`, and Services: `api-gateway â†’ recommendation-service`.
->
-> *"As we can see, the request passes cleanly through the Gateway to the Recommendation Service, all resilience checks pass, and valid product recommendations are returned immediately."*
+| Step | Topic / Objective | Target Scope | Demonstration Scope | Key Visual / Action |
+|:---:|:---|:---:|:---:|:---|
+| **1** | Open Application & Environment Check | General | Live & Local | Open [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/) or `localhost:5173` |
+| **2** | System Architecture & Dashboard Overview | General | Live & Local | Inspect header, service status cards, and architecture map |
+| **3** | Demonstrate Product Catalog Service | Week 1 | Live & Local | Query `/product-service/products` endpoint |
+| **4** | Demonstrate Inventory Service | Week 1 | Live & Local | Query `/inventory-service/inventory/1` endpoint |
+| **5** | Demonstrate Recommendation Service | Week 1 | Live & Local | Query `/recommendation-service/recommendations/1` endpoint |
+| **6** | Demonstrate API Gateway Ingress Routing | Week 1 | Live & Local | Show dynamic path resolution via Spring Cloud Gateway (`:8084`) |
+| **7** | Demonstrate Eureka Service Discovery | Week 1 | Live & Local | View Eureka registered instances (`API-GATEWAY`, `PRODUCT-SERVICE`, etc.) |
+| **8** | Trigger Chaos Service Failure | Week 2 | Live & Local | Click **Trigger Failure** (`?fail=true`) on Chaos Controls |
+| **9** | Demonstrate Circuit Breaker State Machine | Week 2 | Live & Local | Observe `CLOSED` → `OPEN` → `HALF-OPEN` → `CLOSED` transition |
+| **10** | Demonstrate Graceful Fallback Execution | Week 2 | Live & Local | Verify client receives `HTTP 200 OK` fallback JSON payload |
+| **11** | Demonstrate Rate Limiting Protection | Week 3 | Live & Local | Send burst calls (> 2 req / 10s) and observe quota rejection |
+| **12** | Demonstrate Bulkhead Concurrency Isolation | Week 3 | Live & Local | Execute concurrent requests; observe available slots drop from 1.0 to 0.0 |
+| **13** | Demonstrate Latency & TimeLimiter Timeout | Week 4 | Live & Local | Click **Trigger Latency** (`?delay=3000`); verify 2s timeout & fallback |
+| **14** | Demonstrate Micrometer Tracing Context | Week 4 | Local Demo Only | Inspect trace header injection (`traceparent` / `X-B3-TraceId`) |
+| **15** | Open Zipkin UI & Inspect Waterfall Spans | Week 4 | Local Demo Only | Open `http://localhost:9411` and query multi-span trace tree |
+| **16** | Final Project Status & Submission Wrap-Up | Final | Live & Local | Summarize verified 22 QA test cases and 100% pass rate |
 
 ---
 
-## 4. Chaos Test 1: Controlled Failure & Fallback (1.5 Minutes)
+## Environment & Scope Classification
 
-*(Click **Trigger Failure**)*
+To maintain 100% credibility during evaluations, demonstration steps are categorized by accessibility:
 
-> *"Now let's inject a sudden downstream failure. When I click **Trigger Failure**, the request attaches `?fail=true`, causing the Recommendation Service to throw a runtime exception."*
->
-> - **Action**: Click the red `Trigger Failure` button.
-> - **What happens**:
->   - The Recommendation Service throws an internal `RuntimeException`.
->   - Resilience4j's **Retry** aspect attempts 3 retries (1s interval).
->   - When retries fail, the **Circuit Breaker** catches the exception and immediately invokes the **Fallback method**.
->   - Response: `HTTP 200 OK`.
->   - Response Payload:
->     ```json
->     {
->       "productId": "1",
->       "recommendations": ["No recommendations available at this time (Fallback)"]
->     }
->     ```
->   - The UI displays an amber badge: `âš ï¸ Fallback activated`.
->
-> *"Notice that even though the backend service experienced an internal error, the client never received a `500 Internal Server Error`. Instead, the system degraded gracefully, returning a sanitized fallback response within ~2.05 seconds while recording the failure in our metrics."*
+1. **`IMPLEMENTED + DEMONSTRABLE (LIVE & LOCAL)`**:
+   - Live URL: [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/)
+   - Demonstrable steps: Steps 1 through 13, and Step 16.
+2. **`IMPLEMENTED + LOCAL DEMO ONLY`**:
+   - Requires local backend stack or tunnel agent running.
+   - Demonstrable steps: Step 14 (Trace Context Headers) and Step 15 (Zipkin Dashboard at `http://localhost:9411`).
 
 ---
 
-## 5. Chaos Test 2: Latency Simulation & TimeLimiter (1.5 Minutes)
+## Detailed Step-by-Step Walkthrough
 
-*(Click **Trigger Latency**)*
+### Step 1: Open Application & Environment Check
+- **Action**: Open browser and navigate to [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/) (or `http://localhost:5173`).
+- **Script**: *"We begin our 4-week final review demo by loading the CircuitBreaker React monitoring dashboard."*
 
-> *"Next, let's simulate severe network latency or downstream database lock by triggering a 3-second delay on an endpoint configured with a 2-second TimeLimiter."*
->
-> - **Action**: Click the amber `Trigger Latency` button.
-> - **What happens**:
->   - Request sent: `GET /recommendation-service/recommendations/1?delay=3000`.
->   - The service enters an asynchronous sleep.
->   - At exactly **2.0 seconds**, Resilience4j's **TimeLimiter** fires a `TimeoutException` and cancels the thread.
->   - The **Retry** mechanism attempts the call again, timing out each time.
->   - Total request duration finishes at approximately **8.05 seconds**.
->   - Graceful fallback is returned with `HTTP 200 OK`.
->
-> *"This proves that our system protects thread pools from unbounded blocking. Even under extreme latency, the TimeLimiter and Retry mechanisms enforce execution boundaries and fall back safely."*
+### Step 2: Architecture & System Status Overview
+- **Action**: Highlight Service Status Cards at the top of the UI.
+- **Script**: *"The dashboard displays live health indicators for all registered services: Service Registry on port 8080, API Gateway on port 8084, Product Service on 8081, Inventory Service on 8082, and Recommendation Service on 8083."*
 
----
+### Step 3: Product Service Demonstration
+- **Action**: Call Product Service endpoint `/product-service/products`.
+- **Script**: *"Week 1 requirement: Product Service returns catalog JSON containing items like Laptops and Smartphones."*
 
-## 6. Concurrency Isolation: Bulkhead Pattern (1 Minute)
+### Step 4: Inventory Service Demonstration
+- **Action**: Call Inventory Service endpoint `/inventory-service/inventory/1`.
+- **Script**: *"Inventory Service returns stock status: `{"productId":"1","inStock":true,"quantity":100}`."*
 
-*(Point to the **Resilience4j Metrics Card**)*
+### Step 5: Recommendation Service Demonstration
+- **Action**: Call Recommendation Service endpoint `/recommendation-service/recommendations/1`.
+- **Script**: *"Recommendation Service returns cross-sell items: `["Accessories", "Extended Warranty"]`."*
 
-> *"In addition to timeouts, we implemented a **Bulkhead pattern** configured with `maxConcurrentCalls = 1`.*
->
-> *When two long-running requests arrive simultaneously, the first request occupies the single available execution slot (dropping available calls to `0`). The second concurrent request is immediately rejected by the Bulkhead with `BulkheadFullException` and redirected to the fallback method rather than queuing up and exhausting memory.*
->
-> *Once the active request finishes, the Bulkhead instantly recovers back to `1.0` available concurrency slot, ensuring strict resource isolation."*
+### Step 6: API Gateway Ingress Routing
+- **Action**: Show how all requests route through port `8084` without hardcoding microservice IPs.
+- **Script**: *"Spring Cloud Gateway acts as our single entry point, dynamically rewriting path prefixes to route traffic."*
 
----
+### Step 7: Eureka Service Discovery
+- **Action**: View Eureka registry response.
+- **Script**: *"Eureka maintains instance heartbeats, allowing services to scale dynamically."*
 
-## 7. Distributed Tracing in Zipkin (1.5 Minutes)
+### Step 8: Trigger Chaos Service Failure
+- **Action**: Click the red **Trigger Failure** button (`?fail=true`).
+- **Script**: *"Week 2 requirement: We inject an artificial exception into the Recommendation Service."*
 
-*(Click the **Open Zipkin** button in the Tracing Card, opening `http://localhost:9411`)*
+### Step 9: Circuit Breaker State Transition
+- **Action**: Observe the Circuit Breaker Card update.
+- **Script**: *"When failure rate exceeds 50%, Resilience4j transitions state from CLOSED to OPEN for 5 seconds, short-circuiting calls."*
 
-> *"Now let's examine end-to-end observability using Zipkin.*
->
-> *When we open Zipkin and query recent traces for `api-gateway`, we see complete distributed traces for all our chaos actions.*
->
-> *Let's look at the **Latency Trace** (Duration: `8.093s`):*
-> - *Span 1: `api-gateway` (Server ingress â€” 8.093s)*
-> - *Span 2: `api-gateway` (HTTP Client forwarding â€” 8.088s)*
-> - *Span 3: `recommendation-service` (Controller execution â€” 8.085s)*
->
-> *This single trace proves that distributed trace context was preserved across network boundaries through the Gateway all the way to the microservice, giving DevOps and engineering teams immediate root-cause visibility into where latency originated."*
+### Step 10: Graceful Fallback Execution
+- **Action**: Inspect response payload: `HTTP 200 OK`, `["No recommendations available at this time (Fallback)"]`.
+- **Script**: *"The client application receives a clean fallback response with HTTP 200 OK instead of a broken 500 error."*
 
----
+### Step 11: Rate Limiting Demonstration
+- **Action**: Send burst requests (> 2 calls in 10s).
+- **Script**: *"Week 3 requirement: Rate Limiter enforces a 2-request per 10-second quota, rejecting excess calls."*
 
-## 8. Real-Time Metrics & Actuator (1 Minute)
+### Step 12: Bulkhead Concurrency Isolation
+- **Action**: Execute concurrent requests and observe available slots drop from 1.0 to 0.0.
+- **Script**: *"Bulkhead limits concurrent executions to 1 active call, isolating CPU and memory resources."*
 
-*(Point to the **Circuit Breaker** and **Metrics** cards on the dashboard)*
+### Step 13: Latency & TimeLimiter Timeout
+- **Action**: Click **Trigger Latency** (`?delay=3000`).
+- **Script**: *"Week 4 requirement: A 3-second delay triggers Resilience4j's 2-second TimeLimiter timeout, returning fallback after retry cycles."*
 
-> *"Our dashboard continuously polls Spring Boot Actuator endpoints every 3 seconds to reflect live metrics:*
-> - *`resilience4j.circuitbreaker.state`: Reflects the current state (Closed / Open / Half-Open).*
-> - *`resilience4j.circuitbreaker.calls`: Shows successful vs. failed call counts.*
-> - *`resilience4j.ratelimiter.available.permissions`: Tracks our 2-request quota per 10-second period.*
-> - *`resilience4j.bulkhead.available.concurrent.calls`: Tracks concurrent thread availability.*
->
-> *Everything is dynamic, reactive, and driven directly by standard Micrometer metrics."*
+### Step 14: Micrometer Distributed Tracing Context
+- **Action**: Inspect trace context headers (`traceparent` / `X-B3-TraceId`).
+- **Script**: *"Micrometer Tracing injects unified trace IDs across network hops."*
 
----
+### Step 15: Open Zipkin UI & Inspect Waterfall Spans
+- **Action**: Open Zipkin UI (`http://localhost:9411`).
+- **Script**: *"In Zipkin, we inspect the exact waterfall breakdown across 3 distinct spans: Gateway ingress, client proxy, and microservice execution."*
 
-## 9. Conclusion (45 Seconds)
-
-> *"To summarize: **CircuitBreaker** demonstrates a resilient, observable microservices architecture where service discovery, non-blocking routing, multi-layered fault tolerance, and distributed tracing work in harmony.*
->
-> *Whether handling service crashes, transient network drops, high concurrency, or latency spikes, the system guarantees that failures remain isolated and clients always receive responsive, predictable behavior.*
->
-> *Thank you, and I welcome any technical questions!"*
+### Step 16: Final Project Summary & Wrap-Up
+- **Action**: Review verified QA test matrix (22 tests, 100% PASS).
+- **Script**: *"In summary, the CircuitBreaker platform fulfills all Week 1 through Week 4 milestone requirements and is fully verified across 22 test cases."*
 
 ---
-
-## Frequently Asked Technical Interview Questions & Answers
-
-### Q1: Why did you place the CircuitBreaker aspect before the Retry aspect?
-**Answer**: *"The aspect order is critical. In Resilience4j, we configured `circuitBreakerAspectOrder = 1` and `retryAspectOrder = 4`. This ensures the CircuitBreaker sits on the outside. If the inner Retry fails after all 3 attempts, the final exception bubbles up to the CircuitBreaker, which counts it as a failure and routes execution to the `fallbackMethod` so the client receives a 200 fallback response."*
-
-### Q2: Why does the latency test take ~8 seconds when the timeout is 2 seconds?
-**Answer**: *"Because our Retry configuration is set to `maxAttempts = 3` with a `1s` wait duration. When the 3000ms delay runs, the 2-second TimeLimiter fires a `TimeoutException`. The Retry aspect catches this and retries twice more. 3 attempts Ã— ~2s timeout + 2 Ã— 1s retry wait durations equals approximately 8 seconds total before invoking the fallback."*
-
-### Q3: How does Spring Cloud Gateway discover downstream services dynamically?
-**Answer**: *"We enabled `spring.cloud.gateway.discovery.locator.enabled=true` and `lower-case-service-id=true`. The Gateway registers with Eureka as a client and listens to registry events. When a request matching `/{service-id}/**` arrives, Gateway resolves the registered instances from Eureka's local cache and load-balances the call without static route configs."*
-
-### Q4: How is distributed tracing context propagated between the Gateway and services?
-**Answer**: *"We use Micrometer Tracing with the Brave bridge (`micrometer-tracing-bridge-brave`) and Zipkin Reporter (`zipkin-reporter-brave`). When a request enters Spring Cloud Gateway, a `traceId` and root `spanId` are generated and injected as HTTP headers (such as `traceparent` or B3 headers `X-B3-TraceId`). The downstream Spring Boot service extracts these headers upon receiving the request, creates a child span, and reports it back to Zipkin."*
+*Guide compiled and verified strictly against project source code, QA documentation, and deployment endpoints.*

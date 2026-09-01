@@ -1,95 +1,110 @@
-# 🚀 CircuitBreaker Live Demonstration Guide
+# CircuitBreaker — Complete 4-Week Final Demonstration Guide
 
-This guide provides a concise 5–10 minute live demonstration sequence to showcase the Resilience4j fault tolerance implementation.
+This document provides a step-by-step presentation script and live demonstration guide for showcasing the **CircuitBreaker** platform during the **Axlero 4-Week Final Project Review**, technical interviews, or stakeholder presentations.
 
-> **Prerequisite:** Ensure all 5 Spring Boot microservices (Eureka, API Gateway, Product, Inventory, Recommendation) are running.
+---
 
-### 1. Show Eureka
-*Demonstrates that the Service Registry is active and all services are registered.*
-**Command:**
-```powershell
-curl.exe -s http://localhost:8080/eureka/apps
-```
-**Observe:** Look for `API-GATEWAY`, `PRODUCT-SERVICE`, `INVENTORY-SERVICE`, and `RECOMMENDATION-SERVICE` showing `<status>UP</status>`.
+## 4-Week Demonstration Sequence Summary (16 Steps)
 
-### 2. Show Product API
-*Demonstrates a successful direct call to the upstream product domain.*
-**Command:**
-```powershell
-curl.exe -i http://localhost:8081/products
-```
-**Observe:** HTTP 200 OK and a JSON array of products.
+| Step | Topic / Objective | Target Scope | Demonstration Scope | Key Visual / Action |
+|:---:|:---|:---:|:---:|:---|
+| **1** | Open Application & Environment Check | General | Live & Local | Open [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/) or `localhost:5173` |
+| **2** | System Architecture & Dashboard Overview | General | Live & Local | Inspect header, service status cards, and architecture map |
+| **3** | Demonstrate Product Catalog Service | Week 1 | Live & Local | Query `/product-service/products` endpoint |
+| **4** | Demonstrate Inventory Service | Week 1 | Live & Local | Query `/inventory-service/inventory/1` endpoint |
+| **5** | Demonstrate Recommendation Service | Week 1 | Live & Local | Query `/recommendation-service/recommendations/1` endpoint |
+| **6** | Demonstrate API Gateway Ingress Routing | Week 1 | Live & Local | Show dynamic path resolution via Spring Cloud Gateway (`:8084`) |
+| **7** | Demonstrate Eureka Service Discovery | Week 1 | Live & Local | View Eureka registered instances (`API-GATEWAY`, `PRODUCT-SERVICE`, etc.) |
+| **8** | Trigger Chaos Service Failure | Week 2 | Live & Local | Click **Trigger Failure** (`?fail=true`) on Chaos Controls |
+| **9** | Demonstrate Circuit Breaker State Machine | Week 2 | Live & Local | Observe `CLOSED` → `OPEN` → `HALF-OPEN` → `CLOSED` transition |
+| **10** | Demonstrate Graceful Fallback Execution | Week 2 | Live & Local | Verify client receives `HTTP 200 OK` fallback JSON payload |
+| **11** | Demonstrate Rate Limiting Protection | Week 3 | Live & Local | Send burst calls (> 2 req / 10s) and observe quota rejection |
+| **12** | Demonstrate Bulkhead Concurrency Isolation | Week 3 | Live & Local | Execute concurrent requests; observe available slots drop from 1.0 to 0.0 |
+| **13** | Demonstrate Latency & TimeLimiter Timeout | Week 4 | Live & Local | Click **Trigger Latency** (`?delay=3000`); verify 2s timeout & fallback |
+| **14** | Demonstrate Micrometer Tracing Context | Week 4 | Local Demo Only | Inspect trace header injection (`traceparent` / `X-B3-TraceId`) |
+| **15** | Open Zipkin UI & Inspect Waterfall Spans | Week 4 | Local Demo Only | Open `http://localhost:9411` and query multi-span trace tree |
+| **16** | Final Project Status & Submission Wrap-Up | Final | Live & Local | Summarize verified 22 QA test cases and 100% pass rate |
 
-### 3. Show Inventory API
-*Demonstrates a successful direct call to the upstream inventory domain.*
-**Command:**
-```powershell
-curl.exe -i http://localhost:8082/inventory/1
-```
-**Observe:** HTTP 200 OK and inventory quantity data.
+---
 
-### 4. Show Recommendation API
-*Demonstrates a successful direct call to the Recommendation domain.*
-**Command:**
-```powershell
-curl.exe -i http://localhost:8083/recommendations/1
-```
-**Observe:** HTTP 200 OK and an array of recommendations `["Accessories","Extended Warranty"]`.
+## Environment & Scope Classification
 
-### 5. Show Gateway Routing
-*Demonstrates dynamic `lb://` routing through the Spring Cloud Gateway.*
-**Command:**
-```powershell
-curl.exe -i http://localhost:8084/product-service/products
-```
-**Observe:** HTTP 200 OK proving the Gateway is dynamically discovering and routing to the Product service.
+To maintain 100% credibility during evaluations, demonstration steps are categorized by accessibility:
 
-### 6. Demonstrate Circuit Breaker (and Fallback)
-*Demonstrates the fallback mechanism kicking in on simulated failure.*
-**Command:**
-```powershell
-curl.exe -i "http://localhost:8084/recommendation-service/recommendations/1?fail=true"
-```
-**Observe:** HTTP 200 OK but with the fallback payload: `["No recommendations available at this time (Fallback)"]`.
+1. **`IMPLEMENTED + DEMONSTRABLE (LIVE & LOCAL)`**:
+   - Live URL: [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/)
+   - Demonstrable steps: Steps 1 through 13, and Step 16.
+2. **`IMPLEMENTED + LOCAL DEMO ONLY`**:
+   - Requires local backend stack or tunnel agent running.
+   - Demonstrable steps: Step 14 (Trace Context Headers) and Step 15 (Zipkin Dashboard at `http://localhost:9411`).
 
-### 7. Demonstrate Retry & TimeLimiter (8)
-*Demonstrates the Timeout forcing a failure, and the Retry extending the total request time.*
-**Command:**
-```powershell
-Measure-Command { curl.exe -s -i "http://localhost:8084/recommendation-service/recommendations/1?delay=3000" }
-```
-**Observe:** The request takes approximately 8 seconds (2s timeout + 1s wait, retried 3 times), finally yielding the Fallback payload. This proves the time limiter is active and the retry logic is wrapping it!
+---
 
-### 9. Demonstrate RateLimiter
-*Demonstrates the API restricting rapid traffic spikes.*
-**Command:**
-```powershell
-1..4 | ForEach-Object { echo "--- REQUEST $_ ---" ; curl.exe -s -i "http://localhost:8084/recommendation-service/recommendations/1" ; echo "" }
-```
-**Observe:** The first two requests return the normal response. The 3rd and 4th instantly return the Fallback response because the 2-per-10s limit is exhausted. *(Make sure to wait 10 seconds before demonstrating to get a fresh window).*
+## Detailed Step-by-Step Walkthrough
 
-### 10. Demonstrate Bulkhead
-*Demonstrates thread pool/semaphore isolation restricting concurrent capacity.*
-**Command:**
-```powershell
-$jobs = @(
-    Start-Job { curl.exe -s "http://localhost:8083/recommendations/1?delay=5000" }
-    Start-Job { curl.exe -s "http://localhost:8083/recommendations/1?delay=5000" }
-)
-$jobs | Wait-Job | Out-Null
-$jobs | Receive-Job
-$jobs | Remove-Job
-```
-**Observe:** One request succeeds (or times out and falls back after execution), while the other instantly degenerates to the Fallback response without waiting, proving `maxConcurrentCalls=1` is enforced.
+### Step 1: Open Application & Environment Check
+- **Action**: Open browser and navigate to [https://circuit-breaker-one.vercel.app/](https://circuit-breaker-one.vercel.app/) (or `http://localhost:5173`).
+- **Script**: *"We begin our 4-week final review demo by loading the CircuitBreaker React monitoring dashboard."*
 
-### 11. Show Actuator Metrics
-*Demonstrates full observability into the resilience states.*
-**Command:**
-```powershell
-curl.exe -s "http://localhost:8083/actuator/metrics/resilience4j.circuitbreaker.state?tag=name:recommendationService"
-```
-**Observe:** Metrics proving the state of the circuit breaker (e.g. `CLOSED` or `OPEN`). You can also substitute `resilience4j.circuitbreaker.state` with any of the other patterns to observe their metrics.
+### Step 2: Architecture & System Status Overview
+- **Action**: Highlight Service Status Cards at the top of the UI.
+- **Script**: *"The dashboard displays live health indicators for all registered services: Service Registry on port 8080, API Gateway on port 8084, Product Service on 8081, Inventory Service on 8082, and Recommendation Service on 8083."*
 
-### 12. Explain Architecture
-**Conclude the demo by summarizing the flow:** 
-The Gateway handled edge protection, Eureka managed dynamic routing, but it was the **Resilience4j nested configuration (CircuitBreaker → RateLimiter → Bulkhead → Retry → TimeLimiter)** directly in the Recommendation Service that handled failures gracefully and deterministically without taking the whole system offline.
+### Step 3: Product Service Demonstration
+- **Action**: Call Product Service endpoint `/product-service/products`.
+- **Script**: *"Week 1 requirement: Product Service returns catalog JSON containing items like Laptops and Smartphones."*
+
+### Step 4: Inventory Service Demonstration
+- **Action**: Call Inventory Service endpoint `/inventory-service/inventory/1`.
+- **Script**: *"Inventory Service returns stock status: `{"productId":"1","inStock":true,"quantity":100}`."*
+
+### Step 5: Recommendation Service Demonstration
+- **Action**: Call Recommendation Service endpoint `/recommendation-service/recommendations/1`.
+- **Script**: *"Recommendation Service returns cross-sell items: `["Accessories", "Extended Warranty"]`."*
+
+### Step 6: API Gateway Ingress Routing
+- **Action**: Show how all requests route through port `8084` without hardcoding microservice IPs.
+- **Script**: *"Spring Cloud Gateway acts as our single entry point, dynamically rewriting path prefixes to route traffic."*
+
+### Step 7: Eureka Service Discovery
+- **Action**: View Eureka registry response.
+- **Script**: *"Eureka maintains instance heartbeats, allowing services to scale dynamically."*
+
+### Step 8: Trigger Chaos Service Failure
+- **Action**: Click the red **Trigger Failure** button (`?fail=true`).
+- **Script**: *"Week 2 requirement: We inject an artificial exception into the Recommendation Service."*
+
+### Step 9: Circuit Breaker State Transition
+- **Action**: Observe the Circuit Breaker Card update.
+- **Script**: *"When failure rate exceeds 50%, Resilience4j transitions state from CLOSED to OPEN for 5 seconds, short-circuiting calls."*
+
+### Step 10: Graceful Fallback Execution
+- **Action**: Inspect response payload: `HTTP 200 OK`, `["No recommendations available at this time (Fallback)"]`.
+- **Script**: *"The client application receives a clean fallback response with HTTP 200 OK instead of a broken 500 error."*
+
+### Step 11: Rate Limiting Demonstration
+- **Action**: Send burst requests (> 2 calls in 10s).
+- **Script**: *"Week 3 requirement: Rate Limiter enforces a 2-request per 10-second quota, rejecting excess calls."*
+
+### Step 12: Bulkhead Concurrency Isolation
+- **Action**: Execute concurrent requests and observe available slots drop from 1.0 to 0.0.
+- **Script**: *"Bulkhead limits concurrent executions to 1 active call, isolating CPU and memory resources."*
+
+### Step 13: Latency & TimeLimiter Timeout
+- **Action**: Click **Trigger Latency** (`?delay=3000`).
+- **Script**: *"Week 4 requirement: A 3-second delay triggers Resilience4j's 2-second TimeLimiter timeout, returning fallback after retry cycles."*
+
+### Step 14: Micrometer Distributed Tracing Context
+- **Action**: Inspect trace context headers (`traceparent` / `X-B3-TraceId`).
+- **Script**: *"Micrometer Tracing injects unified trace IDs across network hops."*
+
+### Step 15: Open Zipkin UI & Inspect Waterfall Spans
+- **Action**: Open Zipkin UI (`http://localhost:9411`).
+- **Script**: *"In Zipkin, we inspect the exact waterfall breakdown across 3 distinct spans: Gateway ingress, client proxy, and microservice execution."*
+
+### Step 16: Final Project Summary & Wrap-Up
+- **Action**: Review verified QA test matrix (22 tests, 100% PASS).
+- **Script**: *"In summary, the CircuitBreaker platform fulfills all Week 1 through Week 4 milestone requirements and is fully verified across 22 test cases."*
+
+---
+*Guide compiled and verified strictly against project source code, QA documentation, and deployment endpoints.*

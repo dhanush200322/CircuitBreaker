@@ -300,13 +300,26 @@ curl.exe -s http://localhost:9411/api/v2/services
 
 ---
 
+## Project Team & Review Scope
+
+**Axlero Solutions / IntelleQ Academy 4-Week Final Project Review**
+
+- **Team Leader**: Dhanush AV
+- **Team Member 1**: Upputuri Venkata Geethasri
+- **Team Member 2**: Satish Kumar Verma
+- **Team Member 3**: Prem Burnwal
+
+---
+
 ## Documentation Index
 
+- 📋 [Axlero 4-Week Final Project Review Report](docs/AXLERO_FINAL_4_WEEK_PROJECT_REVIEW_REPORT.md)
+- ✅ [Axlero 4-Week Final Review Checklist](docs/AXLERO_FINAL_4_WEEK_REVIEW_CHECKLIST.md)
+- 📊 [Axlero 4-Week Final Presentation Content & Deck](docs/AXLERO_FINAL_PRESENTATION_CONTENT.md)
+- 🎬 [Complete 4-Week Demonstration Guide & Script](docs/DEMO_GUIDE.md)
 - ⚡ [Quick-Action Resume Guide (PC-Restart / Cold-Start)](QUICK_ACTION.md)
 - 🛠️ [Production Operations & Commands Runbook](docs/RUNBOOK.md)
 - 📖 [Comprehensive Architecture Deep-Dive](docs/ARCHITECTURE.md)
-- 🎬 [3–5 Minute Video Demonstration Script](docs/VIDEO-DEMO-SCRIPT.md)
-- ✅ [Video Recording & QA Checklist](docs/VIDEO-CHECKLIST.md)
 - 📡 [Complete REST API Reference Manual](docs/API_REFERENCE.md)
 - 🧪 [Formal QA & Validation Report](docs/QA_REPORT.md)
 - 💼 [Technical Interview & Viva Preparation Guide](docs/INTERVIEW_GUIDE.md)
