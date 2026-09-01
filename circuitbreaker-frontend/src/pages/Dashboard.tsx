@@ -1,50 +1,118 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Header } from '../components/Header';
 import { ServiceStatusCard } from '../components/ServiceStatusCard';
 import { CircuitBreakerCard } from '../components/CircuitBreakerCard';
 import { MetricsCard } from '../components/MetricsCard';
 import { ChaosControls } from '../components/ChaosControls';
 import { TracingCard } from '../components/TracingCard';
-import { getAllResilienceMetrics, getEurekaApps, getZipkinServices } from '../services/api';
+import { ServiceIsolationPanel } from '../components/ServiceIsolationPanel';
+import {
+  getAllResilienceMetrics,
+  getEurekaApps,
+  getZipkinServices,
+  warmupAllServices,
+  checkServiceHealth,
+} from '../services/api';
 import type { ResilienceMetrics } from '../types/resilience';
 import type { StatusType } from '../components/StatusBadge';
+
+interface ServiceMeta {
+  status: StatusType;
+  latencyMs: number | null;
+  lastChecked: string;
+  error?: string;
+}
+
+const DEFAULT_META: ServiceMeta = {
+  status: 'UNKNOWN',
+  latencyMs: null,
+  lastChecked: '',
+};
 
 export const Dashboard = () => {
   const [metrics, setMetrics] = useState<ResilienceMetrics | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [backendOffline, setBackendOffline] = useState(false);
-  const [servicesStatus, setServicesStatus] = useState({
-    eureka: 'UNKNOWN' as StatusType,
-    apiGateway: 'UNKNOWN' as StatusType,
-    product: 'UNKNOWN' as StatusType,
-    inventory: 'UNKNOWN' as StatusType,
-    recommendation: 'UNKNOWN' as StatusType,
-  });
+
+  const [eurekaStatus, setEurekaStatus] = useState<ServiceMeta>(DEFAULT_META);
+  const [gatewayStatus, setGatewayStatus] = useState<ServiceMeta>(DEFAULT_META);
+  const [productStatus, setProductStatus] = useState<ServiceMeta>(DEFAULT_META);
+  const [inventoryStatus, setInventoryStatus] = useState<ServiceMeta>(DEFAULT_META);
+  const [recommendationStatus, setRecommendationStatus] = useState<ServiceMeta>(DEFAULT_META);
   const [zipkinStatus, setZipkinStatus] = useState<StatusType>('UNKNOWN');
   const [tracedServices, setTracedServices] = useState<string[]>([]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const eurekaData = await getEurekaApps();
-      const apps = eurekaData.applications?.application || [];
-      
-      const isUp = (appName: string) => {
-        const app = apps.find((a: any) => a.name === appName);
-        return app?.instance?.[0]?.status === 'UP' ? 'UP' : 'DOWN';
-      };
-
-      setServicesStatus({
-        eureka: 'UP',
-        apiGateway: isUp('API-GATEWAY'),
-        product: isUp('PRODUCT-SERVICE'),
-        inventory: isUp('INVENTORY-SERVICE'),
-        recommendation: isUp('RECOMMENDATION-SERVICE'),
+      // 1. Eureka — primary health signal
+      const eurekaResult = await checkServiceHealth('eureka', '/eureka-api/apps');
+      setEurekaStatus({
+        status: eurekaResult.status,
+        latencyMs: eurekaResult.latencyMs,
+        lastChecked: eurekaResult.lastChecked,
+        error: eurekaResult.error,
       });
 
-      const metricsData = await getAllResilienceMetrics();
-      setMetrics(metricsData);
+      if (eurekaResult.status === 'DOWN') {
+        setBackendOffline(true);
+        setGatewayStatus(s => ({ ...s, status: 'UNKNOWN' }));
+        setProductStatus(s => ({ ...s, status: 'UNKNOWN' }));
+        setInventoryStatus(s => ({ ...s, status: 'UNKNOWN' }));
+        setRecommendationStatus(s => ({ ...s, status: 'UNKNOWN' }));
+        setLastUpdated(new Date().toLocaleTimeString());
+        return;
+      }
+
+      // 2. Parse registered apps from Eureka
+      const eurekaData = await getEurekaApps().catch(() => null);
+      const apps = eurekaData?.applications?.application ?? [];
+
+      const isUp = (appName: string): StatusType => {
+        const app = apps.find((a: any) => a.name === appName);
+        if (!app || !app.instance) return 'DOWN';
+        const instances = Array.isArray(app.instance) ? app.instance : [app.instance];
+        return instances.some((inst: any) => inst?.status === 'UP') ? 'UP' : 'DOWN';
+      };
+
+      // 3. Per-service latency checks in parallel
+      const [gwH, prodH, invH, recH] = await Promise.all([
+        checkServiceHealth('api-gateway', '/gateway/actuator/health'),
+        checkServiceHealth('product-service', '/gateway/product-service/products'),
+        checkServiceHealth('inventory-service', '/gateway/inventory-service/inventory/1'),
+        checkServiceHealth('recommendation-service', '/gateway/recommendation-service/recommendations/1'),
+      ]);
+
+      setGatewayStatus({
+        status: (isUp('API-GATEWAY') === 'UP' && gwH.status === 'UP') ? 'UP' : (isUp('API-GATEWAY') === 'UP' ? 'UP' : 'DOWN'),
+        latencyMs: gwH.latencyMs,
+        lastChecked: gwH.lastChecked,
+        error: gwH.error,
+      });
+      setProductStatus({
+        status: isUp('PRODUCT-SERVICE'),
+        latencyMs: prodH.latencyMs,
+        lastChecked: prodH.lastChecked,
+        error: prodH.status === 'DOWN' ? prodH.error : undefined,
+      });
+      setInventoryStatus({
+        status: isUp('INVENTORY-SERVICE'),
+        latencyMs: invH.latencyMs,
+        lastChecked: invH.lastChecked,
+        error: invH.status === 'DOWN' ? invH.error : undefined,
+      });
+      setRecommendationStatus({
+        status: isUp('RECOMMENDATION-SERVICE'),
+        latencyMs: recH.latencyMs,
+        lastChecked: recH.lastChecked,
+        error: recH.status === 'DOWN' ? recH.error : undefined,
+      });
+
+      // 4. Resilience metrics
+      const metricsData = await getAllResilienceMetrics().catch(() => null);
+      if (metricsData) setMetrics(metricsData);
       setBackendOffline(false);
 
+      // 5. Zipkin
       try {
         const zipkinData = await getZipkinServices();
         setTracedServices(zipkinData);
@@ -56,72 +124,125 @@ export const Dashboard = () => {
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
       setBackendOffline(true);
-      setServicesStatus({
-        eureka: 'DOWN',
-        apiGateway: 'UNKNOWN',
-        product: 'UNKNOWN',
-        inventory: 'UNKNOWN',
-        recommendation: 'UNKNOWN',
-      });
+      setEurekaStatus(s => ({ ...s, status: 'DOWN' }));
       setZipkinStatus('DOWN');
       setMetrics(null);
     } finally {
       setLastUpdated(new Date().toLocaleTimeString());
     }
+  }, []);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await warmupAllServices();
+    await fetchData();
+    setIsRefreshing(false);
   };
 
   useEffect(() => {
+    // Send background warm-up pings to all microservices on Render on initial page load
+    warmupAllServices();
     fetchData();
-    const interval = setInterval(fetchData, 3000);
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchData]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans">
       <Header isOffline={backendOffline} lastUpdated={lastUpdated} />
-      
+
       <main className="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 space-y-8">
-        
+
         {backendOffline && (
           <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-6 py-4 rounded-xl shadow-lg shadow-rose-900/20 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-2xl">⚠️</span>
               <div>
                 <strong className="block font-bold text-rose-300">SYSTEM OFFLINE</strong>
-                <span className="text-sm opacity-90">Unable to connect to backend services. Ensure the Java microservices are running.</span>
+                <span className="text-sm opacity-90">Unable to connect to backend services. Services may be waking up — please wait ~45 seconds.</span>
               </div>
             </div>
           </div>
         )}
 
         {import.meta.env.PROD && !backendOffline && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-6 py-4 rounded-xl shadow-lg shadow-emerald-900/20 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-2xl">✨</span>
-              <div>
-                <strong className="block font-bold text-emerald-300">LIVE OBSERVABILITY ACTIVE</strong>
-                <span className="text-sm opacity-90">Eureka service discovery, Zipkin distributed tracing, and Resilience4j Actuator metrics are fully live through secure read-only public routes.</span>
-              </div>
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-6 py-4 rounded-xl shadow-lg shadow-emerald-900/20 flex items-center gap-4">
+            <span className="text-2xl">✨</span>
+            <div>
+              <strong className="block font-bold text-emerald-300">LIVE OBSERVABILITY ACTIVE</strong>
+              <span className="text-sm opacity-90">Eureka service discovery, Zipkin distributed tracing, and Resilience4j Actuator metrics are fully live.</span>
             </div>
           </div>
         )}
 
         <section>
-          <div className="mb-4">
+          <div className="mb-4 flex justify-between items-center flex-wrap gap-2">
             <h2 className="text-lg font-bold text-slate-200 tracking-wide uppercase">System Overview</h2>
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh system status"
+              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
+            </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <ServiceStatusCard name="Eureka Registry" port="8080" status={servicesStatus.eureka} />
-            <ServiceStatusCard name="API Gateway" port="8084" status={servicesStatus.apiGateway} />
-            <ServiceStatusCard name="Product Service" port="8081" status={servicesStatus.product} />
-            <ServiceStatusCard name="Inventory Service" port="8082" status={servicesStatus.inventory} />
-            <ServiceStatusCard name="Recommendation" port="8083" status={servicesStatus.recommendation} />
+            <ServiceStatusCard
+              name="Eureka Registry"
+              port="8080"
+              status={eurekaStatus.status}
+              latencyMs={eurekaStatus.latencyMs}
+              lastChecked={eurekaStatus.lastChecked}
+              error={eurekaStatus.error}
+            />
+            <ServiceStatusCard
+              name="API Gateway"
+              port="8084"
+              status={gatewayStatus.status}
+              latencyMs={gatewayStatus.latencyMs}
+              lastChecked={gatewayStatus.lastChecked}
+              error={gatewayStatus.error}
+            />
+            <ServiceStatusCard
+              name="Product Service"
+              port="8081"
+              status={productStatus.status}
+              latencyMs={productStatus.latencyMs}
+              lastChecked={productStatus.lastChecked}
+              error={productStatus.error}
+            />
+            <ServiceStatusCard
+              name="Inventory Service"
+              port="8082"
+              status={inventoryStatus.status}
+              latencyMs={inventoryStatus.latencyMs}
+              lastChecked={inventoryStatus.lastChecked}
+              error={inventoryStatus.error}
+            />
+            <ServiceStatusCard
+              name="Recommendation"
+              port="8083"
+              status={recommendationStatus.status}
+              latencyMs={recommendationStatus.latencyMs}
+              lastChecked={recommendationStatus.lastChecked}
+              error={recommendationStatus.error}
+            />
           </div>
         </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+        {/* Circuit Breaker + Tracing + Metrics */}
+        <section aria-label="Circuit Breaker and Metrics" className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <TracingCard status={zipkinStatus} services={tracedServices} />
+            <TracingCard
+              status={zipkinStatus}
+              services={tracedServices}
+            />
             <CircuitBreakerCard metrics={metrics} />
           </div>
           <div className="lg:col-span-3">
@@ -129,10 +250,16 @@ export const Dashboard = () => {
           </div>
         </section>
 
-        <section>
+        {/* Chaos Controls */}
+        <section aria-label="Recommendation Failure Testing">
           <ChaosControls />
         </section>
-        
+
+        {/* Service Isolation */}
+        <section aria-label="Service Isolation Testing">
+          <ServiceIsolationPanel />
+        </section>
+
       </main>
     </div>
   );

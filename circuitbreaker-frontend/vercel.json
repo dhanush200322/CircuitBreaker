@@ -2,24 +2,44 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/gateway/:path*",
-      "destination": "https://gage-rep-proposition-orchestra.trycloudflare.com/:path*"
+      "source": "/gateway/product-service/(.*)",
+      "destination": "https://circuitbreaker-product.onrender.com/$1"
     },
     {
-      "source": "/eureka-api/:path*",
-      "destination": "https://modified-collectors-homework-infant.trycloudflare.com/eureka/:path*"
+      "source": "/gateway/inventory-service/(.*)",
+      "destination": "https://circuitbreaker-inventory.onrender.com/$1"
+    },
+    {
+      "source": "/gateway/recommendation-service/(.*)",
+      "destination": "https://circuitbreaker-recommendation.onrender.com/$1"
+    },
+    {
+      "source": "/gateway/(.*)",
+      "destination": "https://circuitbreaker-gateway.onrender.com/$1"
+    },
+    {
+      "source": "/eureka-api/(.*)",
+      "destination": "https://circuitbreaker-eureka.onrender.com/eureka/$1"
     },
     {
       "source": "/zipkin",
-      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/"
+      "destination": "https://circuitbreaker-zipkin.onrender.com/"
     },
     {
       "source": "/zipkin/",
-      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/"
+      "destination": "https://circuitbreaker-zipkin.onrender.com/"
     },
     {
-      "source": "/zipkin/:path+",
-      "destination": "https://aka-opening-sort-cement.trycloudflare.com/zipkin/:path+"
+      "source": "/zipkin/(.*)",
+      "destination": "https://circuitbreaker-zipkin.onrender.com/$1"
     }
   ]
 }
+
+
+
+
+
+
+
+
