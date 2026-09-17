@@ -21,7 +21,7 @@ public class KeepAliveController {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    @Value("${keepalive.urls.gateway:https://circuitbreaker-gateway.onrender.com/actuator/health}")
+    @Value("${keepalive.urls.gateway:https://circuitbreaker-gateway-2lt8.onrender.com/actuator/health}")
     private String gatewayUrl;
 
     @Value("${keepalive.urls.eureka:https://circuitbreaker-eureka.onrender.com/}")
@@ -36,7 +36,7 @@ public class KeepAliveController {
     @Value("${keepalive.urls.recommendation:https://circuitbreaker-recommendation.onrender.com/actuator/health}")
     private String recommendationUrl;
 
-    @Value("${keepalive.urls.zipkin:https://circuitbreaker-zipkin.onrender.com/zipkin/}")
+    @Value("${keepalive.urls.zipkin:https://circuitbreaker-zipkin-ils1.onrender.com/health}")
     private String zipkinUrl;
 
     @GetMapping("/keep-alive")
