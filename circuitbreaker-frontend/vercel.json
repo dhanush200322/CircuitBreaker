@@ -23,11 +23,11 @@
     },
     {
       "source": "/zipkin",
-      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/"
+      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/zipkin/"
     },
     {
       "source": "/zipkin/",
-      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/"
+      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/zipkin/"
     },
     {
       "source": "/zipkin/(.*)",

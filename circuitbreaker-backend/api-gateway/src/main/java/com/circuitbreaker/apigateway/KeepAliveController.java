@@ -24,16 +24,16 @@ public class KeepAliveController {
     @Value("${keepalive.urls.gateway:https://circuitbreaker-gateway-2lt8.onrender.com/actuator/health}")
     private String gatewayUrl;
 
-    @Value("${keepalive.urls.eureka:https://circuitbreaker-eureka.onrender.com/}")
+    @Value("${keepalive.urls.eureka:https://circuitbreaker-eureka-u3fr.onrender.com/}")
     private String eurekaUrl;
 
-    @Value("${keepalive.urls.product:https://circuitbreaker-product.onrender.com/actuator/health}")
+    @Value("${keepalive.urls.product:https://circuitbreaker-product-nlg5.onrender.com/actuator/health}")
     private String productUrl;
 
-    @Value("${keepalive.urls.inventory:https://circuitbreaker-inventory.onrender.com/actuator/health}")
+    @Value("${keepalive.urls.inventory:https://circuitbreaker-inventory-u6hz.onrender.com/actuator/health}")
     private String inventoryUrl;
 
-    @Value("${keepalive.urls.recommendation:https://circuitbreaker-recommendation.onrender.com/actuator/health}")
+    @Value("${keepalive.urls.recommendation:https://circuitbreaker-recommendation-3ep0.onrender.com/actuator/health}")
     private String recommendationUrl;
 
     @Value("${keepalive.urls.zipkin:https://circuitbreaker-zipkin-ils1.onrender.com/health}")
