@@ -39,6 +39,15 @@ public class KeepAliveController {
     @Value("${keepalive.urls.zipkin:https://circuitbreaker-zipkin-ils1.onrender.com/health}")
     private String zipkinUrl;
 
+    @GetMapping("/")
+    public Map<String, Object> rootHealth() {
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("status", "UP");
+        res.put("service", "api-gateway");
+        res.put("timestamp", System.currentTimeMillis());
+        return res;
+    }
+
     @GetMapping("/keep-alive")
     public CompletableFuture<Map<String, Object>> keepAlive() {
         Map<String, String> targets = new LinkedHashMap<>();
