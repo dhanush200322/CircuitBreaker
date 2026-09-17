@@ -3,35 +3,35 @@
   "rewrites": [
     {
       "source": "/gateway/product-service/(.*)",
-      "destination": "https://circuitbreaker-product.onrender.com/$1"
+      "destination": "https://circuitbreaker-gateway-2lt8.onrender.com/product-service/$1"
     },
     {
       "source": "/gateway/inventory-service/(.*)",
-      "destination": "https://circuitbreaker-inventory.onrender.com/$1"
+      "destination": "https://circuitbreaker-gateway-2lt8.onrender.com/inventory-service/$1"
     },
     {
       "source": "/gateway/recommendation-service/(.*)",
-      "destination": "https://circuitbreaker-recommendation.onrender.com/$1"
+      "destination": "https://circuitbreaker-gateway-2lt8.onrender.com/recommendation-service/$1"
     },
     {
       "source": "/gateway/(.*)",
-      "destination": "https://circuitbreaker-gateway.onrender.com/$1"
+      "destination": "https://circuitbreaker-gateway-2lt8.onrender.com/$1"
     },
     {
       "source": "/eureka-api/(.*)",
-      "destination": "https://circuitbreaker-eureka.onrender.com/eureka/$1"
+      "destination": "https://circuitbreaker-eureka-u3fr.onrender.com/eureka/$1"
     },
     {
       "source": "/zipkin",
-      "destination": "https://circuitbreaker-zipkin.onrender.com/"
+      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/"
     },
     {
       "source": "/zipkin/",
-      "destination": "https://circuitbreaker-zipkin.onrender.com/"
+      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/"
     },
     {
       "source": "/zipkin/(.*)",
-      "destination": "https://circuitbreaker-zipkin.onrender.com/$1"
+      "destination": "https://circuitbreaker-zipkin-ils1.onrender.com/$1"
     }
   ]
 }
